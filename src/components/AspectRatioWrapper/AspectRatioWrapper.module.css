@@ -1,15 +1,12 @@
 .root {
   /* Layout */
   display: block;
-  width: 100%;
+  width: 500px;
   position: relative;
 }
 
 /* Firefox doesn't support image aspect ratio inside flexbox */
 /* Aspect ratio for is given inline */
-.aspectPadding {
-}
-
 .aspectBox {
   /* Layout - image will take space defined by aspect ratio wrapper */
   position: absolute;

@@ -1,10 +1,12 @@
 import React from 'react';
 import { number, objectOf, oneOf, shape, string } from 'prop-types';
 import classNames from 'classnames';
+import sartorialLogo from '../../../../components/Logo/images/sartorialLogo.png';
 
 import { ResponsiveImage } from '../../../../components/index.js';
 
 import css from './CustomAppearance.module.css';
+
 
 /**
  * @typedef {Object} ImageVariant
@@ -74,6 +76,12 @@ export const CustomAppearance = React.forwardRef((props, ref) => {
           sizes={sizes}
         />
       ) : null}
+      
+      <img
+      className={css.imageOverlay}
+      src= {sartorialLogo}
+      alt="Overlay"
+    />
       {hasBackgroundOverlay ? <div className={css.backgroundOverlay} style={overlayStyle} /> : null}
     </div>
   );

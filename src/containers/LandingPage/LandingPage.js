@@ -11,6 +11,9 @@ import { propTypes } from '../../util/types';
 import FallbackPage from './FallbackPage';
 import { ASSET_NAME } from './LandingPage.duck';
 
+import SectionHeroCustom from '../PageBuilder/SectionBuilder/SectionHeroCustom/SectionHeroCustom';
+import SectionCarouselCustom from '../PageBuilder/SectionBuilder/SectionCarouselCustom/SectionCarouselCustom';
+
 const PageBuilder = loadable(() =>
   import(/* webpackChunkName: "PageBuilder" */ '../PageBuilder/PageBuilder')
 );
@@ -18,10 +21,17 @@ const PageBuilder = loadable(() =>
 export const LandingPageComponent = props => {
   const { pageAssetsData, inProgress, error } = props;
 
+  const sectionOverrides = {
+    hero: { component: SectionHeroCustom },
+    carousel: { component: SectionCarouselCustom }
+  };
+  
+
   return (
     <PageBuilder
       pageAssetsData={pageAssetsData?.[camelize(ASSET_NAME)]?.data}
       inProgress={inProgress}
+      options={{sectionComponents: sectionOverrides}}
       error={error}
       fallbackPage={<FallbackPage error={error} />}
     />

@@ -1,0 +1,126 @@
+@import '../../../../styles/customMediaQueries.css';
+
+.carouselContainer {
+  display: flex;
+  justify-content: center;  /* Center the carousel horizontally */
+  align-items: center;
+  overflow: visible;        /* Remove horizontal scrolling */
+  /* padding: 64px 0 0 0; */
+    padding-left: 0px;
+    padding-right: 32px;
+    overflow-x: hidden;   /* 🔒 Prevents overflow from expanding page width */
+    width: 100%;          /* ✅ Ensures container doesn't exceed viewport */
+    max-width: 100vw;     /* ✅ Clamp to viewport */
+  
+
+  /* smartphones, touchscreens: hide arrows */
+  @media (any-hover: none) and (pointer: coarse) {
+    &:hover .carouselArrows {
+      opacity: 0;
+    }
+  }
+  @media (max-width: 600px) {
+    justify-content: flex-start; /* ✅ fix for mobile */
+    padding-left: 0px;
+    padding-right: 32px;
+
+  }
+}
+
+.notEnoughBlocks {
+  @media (--viewportMedium) {
+    display: none;
+  }
+}
+
+.carouselArrows {
+  opacity: 0;          /* Makes arrows invisible */
+  pointer-events: none; /* Prevents arrows from capturing clicks */
+  visibility: visible;  /* Keeps them in the layout */
+}
+
+
+.baseCarousel {
+  display: flex;
+  flex-wrap: nowrap;
+  width: var(--carouselWidth);
+  padding-bottom: 24px;
+  padding-right: 32px; /* preserves space at the right edge */
+
+  overflow-x: auto;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.oneColumn,
+.twoColumns,
+.threeColumns,
+.fourColumns {
+  composes: baseCarousel;
+}
+
+.block {
+  flex: 0 0 auto;
+  /* 64px = horizontal layout paddings */
+  /*width: calc(min(var(--contentMaxWidthPages), var(--carouselWidth)) - 64px);*/
+  width: 340px;
+  height: 325px;
+  margin-right: 8px;
+  scroll-snap-align: center;
+
+  /*transform: translateX(32px);*/
+
+  &:last-of-type {
+    padding-right: 0;
+    margin-right: 32px;
+  }
+
+  @media (--viewportMedium) {
+    margin-right: 32px;
+  }
+
+}
+
+.block img {
+  width: 500px !important;
+  height: 500px !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  object-fit: contain;
+  display: block;
+  transition: transform 0.3s ease;
+
+}
+
+
+
+.block:hover img {
+  transform: scale(1.05);
+}
+
+
+
+  @media (max-width: 600px) {
+    .block img {
+      width: 80vw;
+      height: auto;
+      margin-right: 12px;
+    }
+  
+    .baseCarousel,
+    .fullWidthCarousel {
+      width: 100vw;
+      overflow-x: auto;
+      justify-content: flex-start;
+      padding-left: 16px;
+      flex-wrap: nowrap; /* or wrap if you want multi-line */
+    }
+  }
+  
+

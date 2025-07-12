@@ -102,10 +102,12 @@
   @media (--viewportMedium) {
     justify-content: center;
   }
+
+  
 }
 
 .blockContainer {
-  padding: 64px 32px 0 32px;
+  padding: 16px 16px 0 16px;
 
   &:first-child {
     padding: 0 32px;
@@ -123,33 +125,51 @@
 }
 
 .title {
-  composes: align;
-  max-width: 30ch;
+  max-width: 50ch;
+  font-size: 1.25rem;
+  text-align: left !important;
+  align-self: flex-start !important;
+  justify-self: flex-start !important;
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+  margin-top: 0;
 }
+
+
 
 .description {
   composes: align;
   max-width: 65ch;
+
 }
 
 .ctaButton {
   composes: align;
   display: inline-block;
-  padding: 8px 20px;
-  font-size: 15px;
+  padding: 16px 32px;
+  font-size: 18px;
   background-color: var(--marketplaceColor);
-  border-radius: 4px;
-  color: white;
+  border-radius: 8px;
+  color: #fff;
   text-decoration: none;
-  box-shadow: 0 8px 16px 0 rgb(0 0 0 / 20%);
-  font-weight: 500;
-  margin-top: 24px;
-
-  &:hover {
-    text-decoration: none;
-    background-color: var(--marketplaceColorDark);
-  }
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-top: 32px;
+  transition: all 0.3s ease-in-out;
+  border: 2px solid transparent;
 }
+
+.ctaButton:hover {
+  background-color: var(--marketplaceColorDark);
+  transform: scale(1.05);
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.4);
+  border: 2px solid #fff;
+  text-decoration: none;
+}
+
+
 
 /**
  * Theme: dark 
@@ -214,4 +234,47 @@
 /* dark code block */
 .darkTheme pre {
   background-color: var(--colorGrey700);
+}
+
+.sectionDetails a[href="/s"] {
+  /* copy your ctaButton styles here */
+  display: inline-block;
+  padding: 16px 32px;
+  font-size: 18px;
+  /* background-color: var(--marketplaceColor); */
+  border-radius: 8px;
+  color: #fff;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  text-decoration: none;
+  /* box-shadow: 0 12px 24px rgba(0,0,0,0.3); */
+  /* border: 2px solid transparent; */
+  margin: 32px auto 0 auto; 
+  transition: all 0.3s ease-in-out;
+}
+
+.sectionDetails a[href="/s"]:hover {
+  /* background-color: var(--marketplaceColorDark); */
+  transform: scale(1.40);
+  /* box-shadow: 0 16px 32px rgba(0,0,0,0.4); */
+  /* border: 2px solid #fff; */
+  text-decoration: none;
+}
+
+@media (--viewportMedium) {
+  .sectionDetails a[href="/s"] {
+    font-size: 16px; /* slightly smaller font on mobile */
+    padding: 12px 24px; /* reduce padding on mobile */
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 400px) {
+  .sectionDetails a[href="/s"] {
+    font-size: 14px;
+    padding: 10px 16px;
+    max-width: 90vw;  /* nearly full width but with margin */
+    white-space: normal; /* allow wrapping if necessary */
+  }
 }

@@ -1,9 +1,48 @@
+
 .backgroundImageWrapper {
   position: absolute;
   top: 0;
   right: 0;
   bottom: 0;
   left: 0;
+
+    /* background-image: url('https://sharetribe-assets.imgix.net/6828a25b-005e-46a3-bf53-9371fbeaf8b3/raw/5d/2371cca854436f90fe03bfe81f69f1354da315?auto=format&fit=clip&h=2400&w=2400&s=b300858655a64e71859a8ca7bb99bdcd'); */
+    background-image: url('../../../../assets/heroImg.png');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed; /* for simple CSS parallax */
+
+}
+
+.imageOverlay {
+  position: absolute;
+  top: 40%; /* Move the image to the vertical center */
+  left: 50%; /* Move the image to the horizontal center */
+  transform: translate(-50%, -50%); /* Adjust for the image's size */
+  object-fit: cover; /* Ensures the overlay image scales properly */
+  z-index: 1; /* Ensures it appears above the background image */
+  opacity: 1; /* Adjust transparency of the overlay */
+  pointer-events: none; /* Prevents the overlay from blocking interactions */
+
+  width: auto;      /* default natural size */
+  height: auto;
+  max-width: 100%;  /* don’t overflow container */
+}
+
+/* For smaller screens, override width */
+@media (max-width: 1024px) {
+  .imageOverlay {
+    width: 100vw;     /* responsive on tablets and smaller */
+    max-width: 1000px;
+  }
+}
+
+@media (max-width: 600px) {
+  .imageOverlay {
+    width: 100vw;     /* even more responsive on phones */
+    max-width: 400px;
+  }
+
 }
 
 .backgroundImage {

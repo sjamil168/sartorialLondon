@@ -1,0 +1,12 @@
+diff --git a/node_modules/sharetribe-scripts/config/webpack.config.js b/node_modules/sharetribe-scripts/config/webpack.config.js
+index 79179b6..0d05ce2 100644
+--- a/node_modules/sharetribe-scripts/config/webpack.config.js
++++ b/node_modules/sharetribe-scripts/config/webpack.config.js
+@@ -676,6 +676,7 @@ module.exports = function(webpackEnv, target = 'web') {
+           // both options are optional
+           filename: 'static/css/[name].[contenthash:8].css',
+           chunkFilename: 'static/css/[name].[contenthash:8].chunk.css',
++          ignoreOrder: true,
+         }),
+       // Generate an asset manifest file with the following content:
+       // - "files" key: Mapping of all asset filenames to their corresponding

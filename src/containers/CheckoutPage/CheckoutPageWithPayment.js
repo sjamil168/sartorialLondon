@@ -500,9 +500,11 @@ export const CheckoutPageWithPayment = props => {
   // e.g. {country: 'FI'}
 
   const initialValuesForStripePayment = { name: userName, recipientName: userName };
-  const askShippingDetails =
-    orderData?.deliveryMethod === 'shipping' &&
-    !hasTransactionPassedPendingPayment(existingTransaction, process);
+  // const askShippingDetails =
+  //   orderData?.deliveryMethod === 'shipping' &&
+  //   !hasTransactionPassedPendingPayment(existingTransaction, process);
+  const askShippingDetails = true;
+
 
   // Check if the listing currency is compatible with Stripe for the specified transaction process.
   // This function validates the currency against the transaction process requirements and

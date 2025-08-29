@@ -25,6 +25,7 @@ import {
 import { formatMoney } from '../../util/currency';
 import { createSlug, parse, stringify } from '../../util/urlHelpers';
 import { userDisplayNameAsString } from '../../util/data';
+import { types as sdkTypes } from '../../util/sdkLoader';
 import {
   INQUIRY_PROCESS_NAME,
   getSupportedProcessesInfo,
@@ -37,6 +38,8 @@ import { ModalInMobile, PrimaryButton, AvatarSmall, H1, H2 } from '../../compone
 import PriceVariantPicker from './PriceVariantPicker/PriceVariantPicker';
 
 import css from './OrderPanel.module.css';
+
+const { Money } = sdkTypes;
 
 const BookingTimeForm = loadable(() =>
   import(/* webpackChunkName: "BookingTimeForm" */ './BookingTimeForm/BookingTimeForm')
@@ -136,7 +139,7 @@ const PriceMaybe = props => {
     marketplaceCurrency,
     showCurrencyMismatch = false,
   } = props;
-  const { listingType, unitType } = publicData || {};
+  const { listingType, unitType, shippingPriceInSubunitsOneItem, shippingEnabled } = publicData || {};
 
   const foundListingTypeConfig = validListingTypes.find(conf => conf.listingType === listingType);
   const showPrice = displayPrice(foundListingTypeConfig);
@@ -158,6 +161,14 @@ const PriceMaybe = props => {
     </span>
   );
 
+  // Format shipping price if available
+  const shippingPrice = shippingEnabled && shippingPriceInSubunitsOneItem
+    ? new Money(shippingPriceInSubunitsOneItem, price.currency)
+    : null;
+  const shippingPriceValue = shippingPrice ? (
+    <span className={css.shippingValue}>{formatMoneyIfSupportedCurrency(shippingPrice, intl)}</span>
+  ) : null;
+
   // TODO: In CTA, we don't have space to show proper error message for a mismatch of marketplace currency
   //       Instead, we show the currency code in place of the price
   return showCurrencyMismatch ? (
@@ -171,12 +182,28 @@ const PriceMaybe = props => {
       <div className={css.perUnitInCTA}>
         <FormattedMessage id="OrderPanel.perUnit" values={{ unitType }} />
       </div>
+      {shippingPriceValue && (
+        <div className={css.shippingPriceInCTA}>
+          <FormattedMessage
+            id="OrderPanel.shippingPriceInCTA"
+            values={{ shippingPrice: shippingPriceValue }}
+          />
+        </div>
+      )}
     </div>
   ) : (
     <div className={css.priceContainer}>
       <p className={css.price}>
         <FormattedMessage id="OrderPanel.price" values={{ priceValue, pricePerUnit }} />
       </p>
+      {shippingPriceValue && (
+        <p className={css.shippingPrice}>
+          <FormattedMessage
+            id="OrderPanel.shippingPrice"
+            values={{ shippingPrice: shippingPriceValue }}
+          />
+        </p>
+      )}
     </div>
   );
 };

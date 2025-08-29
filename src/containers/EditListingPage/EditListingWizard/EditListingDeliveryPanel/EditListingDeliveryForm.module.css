@@ -19,6 +19,18 @@
   color: var(--colorFail);
 }
 
+.shippingInfo {
+  /* Font */
+  composes: marketplaceSmallFontStyles from global;
+  color: var(--colorGrey600);
+  
+  /* Layout */
+  margin: 12px 0;
+  padding: 12px;
+  background-color: var(--colorGrey50);
+  border-radius: 4px;
+}
+
 .deliveryOption {
   margin-left: 30px;
   @media (--viewportMedium) {

@@ -154,21 +154,41 @@ export const EditListingPricingForm = props => (
               listingMinimumPriceSubUnits={listingMinimumPriceSubUnits}
             />
           ) : (
-            <FieldCurrencyInput
-              id={`${formId}price`}
-              name="price"
-              className={css.input}
-              autoFocus={autoFocus}
-              label={intl.formatMessage(
-                { id: 'EditListingPricingForm.pricePerProduct' },
-                { unitType }
-              )}
-              placeholder={intl.formatMessage({
-                id: 'EditListingPricingForm.priceInputPlaceholder',
-              })}
-              currencyConfig={appSettings.getCurrencyFormatting(marketplaceCurrency)}
-              validate={priceValidators}
-            />
+            <>
+              <FieldCurrencyInput
+                id={`${formId}price`}
+                name="price"
+                className={css.input}
+                autoFocus={autoFocus}
+                label={intl.formatMessage(
+                  { id: 'EditListingPricingForm.pricePerProduct' },
+                  { unitType }
+                )}
+                placeholder={intl.formatMessage({
+                  id: 'EditListingPricingForm.priceInputPlaceholder',
+                })}
+                currencyConfig={appSettings.getCurrencyFormatting(marketplaceCurrency)}
+                validate={priceValidators}
+              />
+              
+              <FieldCurrencyInput
+                id={`${formId}shippingPrice`}
+                name="shippingPriceInSubunitsOneItem"
+                className={css.input}
+                label={intl.formatMessage({
+                  id: 'EditListingPricingForm.shippingPriceLabel',
+                })}
+                placeholder={intl.formatMessage({
+                  id: 'EditListingPricingForm.shippingPricePlaceholder',
+                })}
+                currencyConfig={appSettings.getCurrencyFormatting(marketplaceCurrency)}
+                validate={validators.required(
+                  intl.formatMessage({
+                    id: 'EditListingPricingForm.shippingPriceRequired',
+                  })
+                )}
+              />
+            </>
           )}
 
           {isFixedLengthBooking ? (

@@ -175,15 +175,41 @@ exports.transactionLineItems = (listing, orderData, providerCommission, customer
 
   // Here "extra line-items" means line-items that are tied to unit type
   // E.g. by default, "shipping-fee" is tied to 'item' aka buying products.
+  // Now shipping is also available for booking processes.
+  const getShippingLineItemsIfEnabled = (orderData, publicData, currency) => {
+    const { shippingEnabled, shippingPriceInSubunitsOneItem } = publicData;
+    if (shippingEnabled && shippingPriceInSubunitsOneItem != null) {
+      const shippingFee = new Money(shippingPriceInSubunitsOneItem, currency);
+      return [
+        {
+          code: 'line-item/shipping-fee',
+          unitPrice: shippingFee,
+          quantity: 1,
+          includeFor: ['customer', 'provider'],
+        },
+      ];
+    }
+    return [];
+  };
+
   const quantityAndExtraLineItems =
     unitType === 'item'
       ? getItemQuantityAndLineItems(orderData, publicData, currency)
       : unitType === 'fixed'
-      ? getFixedQuantityAndLineItems(orderData)
+      ? {
+          ...getFixedQuantityAndLineItems(orderData),
+          extraLineItems: getShippingLineItemsIfEnabled(orderData, publicData, currency),
+        }
       : unitType === 'hour'
-      ? getHourQuantityAndLineItems(orderData)
+      ? {
+          ...getHourQuantityAndLineItems(orderData),
+          extraLineItems: getShippingLineItemsIfEnabled(orderData, publicData, currency),
+        }
       : ['day', 'night'].includes(unitType)
-      ? getDateRangeQuantityAndLineItems(orderData, code)
+      ? {
+          ...getDateRangeQuantityAndLineItems(orderData, code),
+          extraLineItems: getShippingLineItemsIfEnabled(orderData, publicData, currency),
+        }
       : {};
 
   const { quantity, units, seats, extraLineItems } = quantityAndExtraLineItems;

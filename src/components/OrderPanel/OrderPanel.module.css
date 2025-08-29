@@ -247,6 +247,24 @@
   }
 }
 
+.shippingPrice {
+  /* Font */
+  composes: marketplaceSmallFontStyles from global;
+  color: var(--colorGrey600);
+  
+  /* Layout */
+  margin: 0;
+  padding: 0;
+}
+
+.shippingPriceInCTA {
+  /* Font */
+  composes: marketplaceTinyFontStyles from global;
+  color: var(--colorGrey600);
+  margin-top: 2px;
+  margin-bottom: 0px;
+}
+
 .closedListingButton {
   border-left: 1px solid var(--colorGrey100);
   width: 100%;

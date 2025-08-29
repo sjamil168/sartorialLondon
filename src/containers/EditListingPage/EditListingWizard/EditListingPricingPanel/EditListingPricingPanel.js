@@ -35,19 +35,31 @@ const getListingTypeConfig = (publicData, listingTypes) => {
 // exporting helper functions that handle the initial values and the submission values.
 // This is a tentative approach to contain logic in one place.
 const getInitialValues = props => {
-  const { listing, listingTypes } = props;
-  const { publicData } = listing?.attributes || {};
-  const { unitType } = publicData || {};
+  const { listing, listingTypes, marketplaceCurrency } = props;
+  const { publicData, price } = listing?.attributes || {};
+  const { unitType, shippingPriceInSubunitsOneItem } = publicData || {};
   const listingTypeConfig = getListingTypeConfig(publicData, listingTypes);
   // Note: publicData contains priceVariationsEnabled if listing is created with priceVariations enabled.
   const isPriceVariationsInUse = isPriceVariationsEnabled(publicData, listingTypeConfig);
 
-  return unitType === FIXED || isPriceVariationsInUse
+  // Convert shipping price from subunits to Money object
+  const currency = price?.currency || marketplaceCurrency;
+  const shippingOneItemAsMoney =
+    shippingPriceInSubunitsOneItem != null
+      ? new Money(shippingPriceInSubunitsOneItem, currency)
+      : null;
+
+  const baseValues = unitType === FIXED || isPriceVariationsInUse
     ? {
         ...getInitialValuesForPriceVariants(props, isPriceVariationsInUse),
         ...getInitialValuesForStartTimeInterval(props),
       }
     : { price: listing?.attributes?.price };
+
+  return {
+    ...baseValues,
+    shippingPriceInSubunitsOneItem: shippingOneItemAsMoney,
+  };
 };
 
 // This is needed to show the listing's price consistently over XHR calls.
@@ -152,13 +164,27 @@ const EditListingPricingPanel = props => {
           className={css.form}
           initialValues={initialValues}
           onSubmit={values => {
-            const { price } = values;
+            const { price, shippingPriceInSubunitsOneItem } = values;
+
+            // Handle shipping price data
+            const shippingDataMaybe =
+              shippingPriceInSubunitsOneItem != null
+                ? {
+                    // Note: we only save the "amount" because currency should not differ from listing's price.
+                    // Money is always dealt in subunits (e.g. cents) to avoid float calculations.
+                    shippingPriceInSubunitsOneItem: shippingPriceInSubunitsOneItem.amount,
+                    shippingEnabled: true,
+                  }
+                : {};
 
             // New values for listing attributes
             let updateValues = {};
 
             if (unitType === FIXED || isPriceVariationsInUse) {
-              let publicDataUpdates = { priceVariationsEnabled: isPriceVariationsInUse };
+              let publicDataUpdates = { 
+                priceVariationsEnabled: isPriceVariationsInUse,
+                ...shippingDataMaybe,
+              };
               // NOTE: components that handle price variants and start time interval are currently
               // exporting helper functions that handle the initial values and the submission values.
               // This is a tentative approach to contain logic in one place.
@@ -180,7 +206,9 @@ const EditListingPricingPanel = props => {
                 ...priceVariantChanges,
                 ...startTimeIntervalChanges,
                 publicData: {
+                  ...publicData,
                   priceVariationsEnabled: isPriceVariationsInUse,
+                  ...shippingDataMaybe,
                   ...startTimeIntervalChanges.publicData,
                   ...priceVariantChanges.publicData,
                 },
@@ -189,10 +217,17 @@ const EditListingPricingPanel = props => {
               const priceVariationsEnabledMaybe = isBooking
                 ? {
                     publicData: {
+                      ...publicData,
                       priceVariationsEnabled: false,
+                      ...shippingDataMaybe,
                     },
                   }
-                : {};
+                : {
+                    publicData: {
+                      ...publicData,
+                      ...shippingDataMaybe,
+                    },
+                  };
               updateValues = { price, ...priceVariationsEnabledMaybe };
             }
 
@@ -202,6 +237,7 @@ const EditListingPricingPanel = props => {
               initialValues: getInitialValues({
                 listing: getOptimisticListing(listing, updateValues),
                 listingTypes,
+                marketplaceCurrency,
               }),
             });
             onSubmit(updateValues);

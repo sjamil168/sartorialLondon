@@ -280,6 +280,7 @@
   "EditListingLocationPanel.createListingTitle": "Location",
   "EditListingLocationPanel.title": "Edit the location of {listingTitle}",
   "EditListingPage.loadingListingData": "Loading listing data…",
+  "SectionFeaturedFits.loading": "Loading featured fits...",
   "EditListingPage.titleCreateListing": "Post a new listing",
   "EditListingPage.titleEditListing": "Edit listing",
   "EditListingPhotosForm.addImagesTip": "Tip: Upload 2-3 good-quality photos from different angles.",

@@ -15,7 +15,11 @@ const COLUMN_CONFIG = [
   { css: css.fourColumns, responsiveImageSizes: '(max-width: 767px) 100vw, 265px' },
 ];
 const getIndex = numColumns => numColumns - 1;
-const getColumnCSS = numColumns => {
+const getColumnCSS = (numColumns, isCategories = false) => {
+  // Use special categories grid for categories section
+  if (isCategories && numColumns === 4) {
+    return css.categoriesGrid;
+  }
   const config = COLUMN_CONFIG[getIndex(numColumns)];
   return config ? config.css : COLUMN_CONFIG[0].css;
 };
@@ -74,6 +78,7 @@ const SectionColumns = props => {
     callToAction,
     blocks = [],
     isInsideContainer = false,
+    isCategories = false,
     options,
   } = props;
 
@@ -102,7 +107,7 @@ const SectionColumns = props => {
       ) : null}
       {hasBlocks ? (
         <div
-          className={classNames(defaultClasses.blockContainer, getColumnCSS(numColumns), {
+          className={classNames(defaultClasses.blockContainer, getColumnCSS(numColumns, isCategories), {
             [css.noSidePaddings]: isInsideContainer,
           })}
         >

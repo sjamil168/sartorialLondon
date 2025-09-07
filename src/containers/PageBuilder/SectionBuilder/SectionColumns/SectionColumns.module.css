@@ -15,20 +15,77 @@
 
 .twoColumns {
   composes: baseColumn;
+  /* Mobile: 2x2 grid like Gucci */
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  padding: 16px;
+  
   @media (--viewportMedium) {
     grid-template-columns: repeat(2, calc((100% - 32px) / 2));
+    gap: 32px;
+    padding: 32px;
   }
 }
 .threeColumns {
   composes: baseColumn;
+  /* Mobile: Stack vertically, Desktop: 3 columns horizontal */
+  grid-template-columns: 1fr;
+  gap: 24px;
+  padding: 16px;
+  
   @media (--viewportMedium) {
     grid-template-columns: repeat(3, calc((100% - 2 * 32px) / 3));
+    gap: 32px;
+    padding: 32px;
   }
 }
 .fourColumns {
   composes: baseColumn;
+  /* Mobile: 2x2 grid layout for categories */
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  padding: 16px;
+  
   @media (--viewportMedium) {
     grid-template-columns: repeat(4, calc((100% - 3 * 32px) / 4));
+    gap: 32px;
+    padding: 32px;
+  }
+}
+
+/* Special class for categories section that maintains 2x2 on mobile */
+.categoriesGrid {
+  composes: baseColumn;
+  /* Mobile: 2x2 grid like Gucci website with much bigger images */
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+  padding: 8px;
+  
+  /* Make the grid items much bigger */
+  & > * {
+    min-height: 180px;
+    height: 180px;
+  }
+  
+  @media (--viewportMedium) {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    padding: 20px;
+    
+    & > * {
+      min-height: 220px;
+      height: 220px;
+    }
+  }
+  
+  @media (--viewportLarge) {
+    gap: 20px;
+    padding: 24px;
+    
+    & > * {
+      min-height: 250px;
+      height: 250px;
+    }
   }
 }
 

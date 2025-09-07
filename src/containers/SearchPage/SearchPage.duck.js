@@ -32,6 +32,11 @@ export const SEARCH_MAP_LISTINGS_ERROR = 'app/SearchPage/SEARCH_MAP_LISTINGS_ERR
 
 export const SEARCH_MAP_SET_ACTIVE_LISTING = 'app/SearchPage/SEARCH_MAP_SET_ACTIVE_LISTING';
 
+// Featured Fits actions
+export const FETCH_FEATURED_FITS_REQUEST = 'app/SectionFeaturedFits/FETCH_FEATURED_FITS_REQUEST';
+export const FETCH_FEATURED_FITS_SUCCESS = 'app/SectionFeaturedFits/FETCH_FEATURED_FITS_SUCCESS';
+export const FETCH_FEATURED_FITS_ERROR = 'app/SectionFeaturedFits/FETCH_FEATURED_FITS_ERROR';
+
 // ================ Reducer ================ //
 
 const initialState = {
@@ -40,6 +45,10 @@ const initialState = {
   searchInProgress: false,
   searchListingsError: null,
   currentPageResultIds: [],
+  // Featured Fits state
+  featuredFits: [],
+  featuredFitsLoading: false,
+  featuredFitsError: null,
 };
 
 const resultIds = data => {
@@ -77,6 +86,30 @@ const listingPageReducer = (state = initialState, action = {}) => {
         ...state,
         activeListingId: payload,
       };
+    
+    case FETCH_FEATURED_FITS_REQUEST:
+      return {
+        ...state,
+        featuredFitsLoading: true,
+        featuredFitsError: null,
+      };
+    
+    case FETCH_FEATURED_FITS_SUCCESS:
+      return {
+        ...state,
+        featuredFits: payload,
+        featuredFitsLoading: false,
+        featuredFitsError: null,
+      };
+    
+    case FETCH_FEATURED_FITS_ERROR:
+      return {
+        ...state,
+        featuredFits: [],
+        featuredFitsLoading: false,
+        featuredFitsError: payload,
+      };
+    
     default:
       return state;
   }

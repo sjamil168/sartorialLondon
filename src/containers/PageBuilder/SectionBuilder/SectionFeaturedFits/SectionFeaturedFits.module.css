@@ -1,0 +1,58 @@
+/* Featured Fits Section */
+.loadingContainer {
+  /* Layout */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 60px 20px;
+  
+  /* Font */
+  composes: marketplaceSmallFontStyles from global;
+  color: var(--colorGrey600);
+}
+
+.featuredFitsContainer {
+  /* Layout - Center like categories */
+  max-width: var(--contentMaxWidthPages);
+  margin: 0 auto;
+  padding: 16px;
+  
+  @media (--viewportMedium) {
+    padding: 32px;
+  }
+}
+
+/* Horizontal Row Container - Like Original */
+.carousel {
+  /* Layout - Mobile: 2x2 grid like categories, Desktop: 4 columns horizontal */
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* Mobile: 2x2 grid */
+  gap: 16px;
+  
+  /* Force 4 columns on screens 600px and wider */
+  @media (min-width: 600px) {
+    grid-template-columns: repeat(4, 1fr); /* Desktop: 4 columns horizontal */
+    gap: 20px;
+  }
+  
+  @media (--viewportMedium) {
+    gap: 24px;
+  }
+  
+  @media (--viewportLarge) {
+    gap: 32px;
+  }
+}
+
+/* Individual Grid Items */
+.carouselItem {
+  /* Layout - Full width in grid cell */
+  width: 100%;
+}
+
+/* Focus styles for accessibility */
+.carouselItem:focus-within {
+  outline: 2px solid var(--colorPrimary);
+  outline-offset: 2px;
+  border-radius: 8px;
+}

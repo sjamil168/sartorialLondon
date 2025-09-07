@@ -6,6 +6,7 @@ import SectionArticle from './SectionArticle';
 import SectionCarousel from './SectionCarousel';
 import SectionColumns from './SectionColumns';
 import SectionFeatures from './SectionFeatures';
+import SectionFeaturedFits from './SectionFeaturedFits/SectionFeaturedFits';
 import SectionHero from './SectionHero';
 
 // Styles
@@ -36,6 +37,7 @@ const defaultSectionComponents = {
   carousel: { component: SectionCarousel },
   columns: { component: SectionColumns },
   features: { component: SectionFeatures },
+  featuredFits: { component: SectionFeaturedFits },
   footer: { component: SectionFooter },
   hero: { component: SectionHero },
 };
@@ -124,6 +126,28 @@ const SectionBuilder = props => {
           section?.appearance?.textColor === 'white';
         const classes = classNames({ [css.darkTheme]: isDarkTheme });
         const sectionId = getUniqueSectionId(section.sectionId, index);
+
+        // 🎯 SMART OVERRIDE: If this is a columns section named "Featured Fits", use our dynamic component instead
+        const isFeaturedFitsSection = section.sectionType === 'columns' && 
+                                      (section.sectionName === 'Featured Fits' || 
+                                       section.title?.content === 'Featured Fits');
+        
+        if (isFeaturedFitsSection) {
+          const FeaturedFitsComponent = components.featuredFits?.component;
+          if (FeaturedFitsComponent) {
+            return (
+              <FeaturedFitsComponent
+                key={`${sectionId}_i${index}`}
+                className={classes}
+                defaultClasses={DEFAULT_CLASSES}
+                isInsideContainer={isInsideContainer}
+                options={otherOption}
+                {...section}
+                sectionId={sectionId}
+              />
+            );
+          }
+        }
 
         if (Section) {
           return (

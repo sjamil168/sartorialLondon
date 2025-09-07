@@ -13,6 +13,7 @@ import { ASSET_NAME } from './LandingPage.duck';
 
 import SectionHeroCustom from '../PageBuilder/SectionBuilder/SectionHeroCustom/SectionHeroCustom';
 import SectionCarouselCustom from '../PageBuilder/SectionBuilder/SectionCarouselCustom/SectionCarouselCustom';
+import SectionFeaturedFits from '../PageBuilder/SectionBuilder/SectionFeaturedFits/SectionFeaturedFits';
 
 const PageBuilder = loadable(() =>
   import(/* webpackChunkName: "PageBuilder" */ '../PageBuilder/PageBuilder')
@@ -23,7 +24,8 @@ export const LandingPageComponent = props => {
 
   const sectionOverrides = {
     hero: { component: SectionHeroCustom },
-    carousel: { component: SectionCarouselCustom }
+    carousel: { component: SectionCarouselCustom },
+    featuredFits: { component: SectionFeaturedFits }
   };
   
 

@@ -2,57 +2,82 @@
 
 .carouselContainer {
   display: flex;
-  justify-content: center;  /* Center the carousel horizontally */
   align-items: center;
-  overflow: visible;        /* Remove horizontal scrolling */
-  /* padding: 64px 0 0 0; */
-    padding-left: 0px;
-    padding-right: 32px;
-    overflow-x: hidden;   /* 🔒 Prevents overflow from expanding page width */
-    width: 100%;          /* ✅ Ensures container doesn't exceed viewport */
-    max-width: 100vw;     /* ✅ Clamp to viewport */
-  
+  scroll-behavior: smooth;
+  padding: 64px 0 0 0;
 
-  /* smartphones, touchscreens: hide arrows */
+  &:hover .carouselArrows {
+    opacity: 1;
+  }
+
+  /* smartphones, touchscreens: we don't need to show arrows */
   @media (any-hover: none) and (pointer: coarse) {
     &:hover .carouselArrows {
       opacity: 0;
     }
   }
-  @media (max-width: 600px) {
-    justify-content: flex-start; /* ✅ fix for mobile */
-    padding-left: 0px;
-    padding-right: 32px;
+}
 
+.carouselArrows {
+  opacity: 0;
+  z-index: 2;
+  transition: all ease-in-out 500ms;
+}
+
+.carouselArrowPrev,
+.carouselArrowNext {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  z-index: 2;
+
+  width: 48px;
+  height: 48px;
+  padding: 0px 0 4px 0;
+  margin-top: -64px;
+  border-radius: 100%;
+  border: none;
+
+  background-color: lightgrey;
+  opacity: 0.9;
+  font-size: 30px;
+  color: black;
+  transition: all ease-in-out 100ms;
+
+  &:hover {
+    opacity: 1;
+    cursor: pointer;
+    background: black;
+    color: white;
   }
 }
 
+.carouselArrowPrev {
+  left: 48px;
+}
+
+.carouselArrowNext {
+  right: 48px;
+}
 .notEnoughBlocks {
   @media (--viewportMedium) {
     display: none;
   }
 }
 
-.carouselArrows {
-  opacity: 0;          /* Makes arrows invisible */
-  pointer-events: none; /* Prevents arrows from capturing clicks */
-  visibility: visible;  /* Keeps them in the layout */
-}
-
-
 .baseCarousel {
   display: flex;
   flex-wrap: nowrap;
   width: var(--carouselWidth);
   padding-bottom: 24px;
-  padding-right: 32px; /* preserves space at the right edge */
 
   overflow-x: auto;
   -ms-overflow-style: none;
   scrollbar-width: none;
   scroll-snap-type: x mandatory;
   scroll-behavior: smooth;
-  
+
   &::-webkit-scrollbar {
     display: none;
   }
@@ -68,59 +93,83 @@
 .block {
   flex: 0 0 auto;
   /* 64px = horizontal layout paddings */
-  /*width: calc(min(var(--contentMaxWidthPages), var(--carouselWidth)) - 64px);*/
-  width: 340px;
-  height: 325px;
-  margin-right: 8px;
+  width: calc(min(var(--contentMaxWidthPages), var(--carouselWidth)) - 64px);
+
+  margin-right: 16px;
   scroll-snap-align: center;
 
-  /*transform: translateX(32px);*/
+  transform: translateX(32px);
 
   &:last-of-type {
-    padding-right: 0;
-    margin-right: 32px;
+    padding-right: 32px;
+    /* 32px (padding-right above) */
+    width: calc(min(var(--contentMaxWidthPages), var(--carouselWidth)) - 32px);
   }
 
   @media (--viewportMedium) {
     margin-right: 32px;
   }
 
-}
+  @media (min-width: 1200px) {
+    /* Offset the start of the carousel so it follows the global grid layout (e.g. (1400 - 1200) / 2 = 100px) */
+    /* Removing this uses the full page width for the slider pane */
+    transform: translateX(
+      max(calc((var(--carouselWidth) - var(--contentMaxWidthPages)) / 2 + 32px), 0px)
+    );
 
-.block img {
-  width: 500px !important;
-  height: 500px !important;
-  max-width: 100% !important;
-  max-height: 100% !important;
-  object-fit: contain;
-  display: block;
-  transition: transform 0.3s ease;
-
-}
-
-
-
-.block:hover img {
-  transform: scale(1.05);
-}
-
-
-
-  @media (max-width: 600px) {
-    .block img {
-      width: 80vw;
-      height: auto;
-      margin-right: 12px;
-    }
-  
-    .baseCarousel,
-    .fullWidthCarousel {
-      width: 100vw;
-      overflow-x: auto;
-      justify-content: flex-start;
-      padding-left: 16px;
-      flex-wrap: nowrap; /* or wrap if you want multi-line */
+    &:last-of-type {
+      padding-right: 32px;
+      width: calc(
+        min(var(--contentMaxWidthPages), var(--carouselWidth)) - 32px
+      ); /* 32px (padding-right above) */
     }
   }
-  
+}
 
+.oneColumn .block {
+  @media (--viewportMedium) {
+    /* 64px (horizontal layout paddings) */
+    width: calc(min(var(--contentMaxWidthPages), var(--carouselWidth)) - 64px);
+
+    &:last-of-type {
+      /* 32px (padding-right) */
+      width: calc(min(var(--contentMaxWidthPages), var(--carouselWidth)) - 32px);
+    }
+  }
+}
+
+.twoColumns .block {
+  @media (--viewportMedium) {
+    /* 64px (horizontal layout paddings) - 32px (one gutter á 32px) / 2 (number of columns) */
+    width: calc((min(var(--contentMaxWidthPages), var(--carouselWidth)) - 64px - 32px) / 2);
+
+    &:last-of-type {
+      /* 32px (padding-right above) / 2 (number of columns) */
+      width: calc((min(var(--contentMaxWidthPages), var(--carouselWidth)) - 32px) / 2);
+    }
+  }
+}
+
+.threeColumns .block {
+  @media (--viewportMedium) {
+    /* 64px (horizontal layout paddings) - 32px (two gutters á 32px) / 3 (number of columns) */
+    width: calc((min(var(--contentMaxWidthPages), var(--carouselWidth)) - 64px - 64px) / 3);
+
+    &:last-of-type {
+      /* 32px (padding-right above) / 3 (number of columns) */
+      width: calc((min(var(--contentMaxWidthPages), var(--carouselWidth)) - 32px) / 3);
+    }
+  }
+}
+
+.fourColumns .block {
+  @media (--viewportMedium) {
+    /* 64px (horizontal layout paddings) - 96px (three gutters á 32px) / 4 (number of columns) */
+    width: calc((min(var(--contentMaxWidthPages), var(--carouselWidth)) - 64px - 96px) / 4);
+
+    &:last-of-type {
+      /* 32px (padding-right above) / 4 (number of columns) */
+      width: calc((min(var(--contentMaxWidthPages), var(--carouselWidth)) - 32px) / 4);
+    }
+  }
+}

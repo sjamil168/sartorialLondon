@@ -1,6 +1,7 @@
 @import '../assets/sanitize.css';
 @import './customMediaQueries.css';
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&display=swap');
+
 
 /* ================ Custom Properties aka CSS variables ================ */
 
@@ -73,7 +74,7 @@
   --colorSecondaryButtonLight: var(--colorWhite);
 
   /* ================ Font ================ */
-  --fontFamily: 'Montserrat',-apple-system, BlinkMacSystemFont, Helvetica, Arial, sans-serif,
+  --fontFamily: 'Bodoni Moda',-apple-system, BlinkMacSystemFont, Helvetica, Arial, sans-serif,
     'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
 
   --fontWeightRegular: 400;

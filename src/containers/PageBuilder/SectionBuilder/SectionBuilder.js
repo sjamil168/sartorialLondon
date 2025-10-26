@@ -129,8 +129,8 @@ const SectionBuilder = props => {
 
         // 🎯 SMART OVERRIDE: If this is a columns section named "Featured Fits", use our dynamic component instead
         const isFeaturedFitsSection = section.sectionType === 'columns' && 
-                                      (section.sectionName === 'Featured Fits' || 
-                                       section.title?.content === 'Featured Fits');
+                                      (section.sectionName === 'Just Landed' || 
+                                       section.title?.content === 'Just Landed');
         
         if (isFeaturedFitsSection) {
           const FeaturedFitsComponent = components.featuredFits?.component;

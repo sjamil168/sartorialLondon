@@ -196,6 +196,24 @@ export const EditListingPricingAndStockForm = props => (
             validate={priceValidators}
           />
 
+          <FieldCurrencyInput
+            id={`${formId}shippingPrice`}
+            name="shippingPriceInSubunitsOneItem"
+            className={css.input}
+            label={intl.formatMessage({
+              id: 'EditListingPricingForm.shippingPriceLabel',
+            })}
+            placeholder={intl.formatMessage({
+              id: 'EditListingPricingForm.shippingPricePlaceholder',
+            })}
+            currencyConfig={appSettings.getCurrencyFormatting(marketplaceCurrency)}
+            validate={validators.required(
+              intl.formatMessage({
+                id: 'EditListingPricingForm.shippingPriceRequired',
+              })
+            )}
+          />
+
           <UpdateStockToInfinityCheckboxMaybe
             formId={formId}
             hasInfiniteStock={hasInfiniteStock}

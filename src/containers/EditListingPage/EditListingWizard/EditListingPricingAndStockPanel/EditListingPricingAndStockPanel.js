@@ -23,7 +23,7 @@ const getListingTypeConfig = (publicData, listingTypes) => {
 };
 
 const getInitialValues = props => {
-  const { listing, listingTypes } = props;
+  const { listing, listingTypes, marketplaceCurrency } = props;
   const isPublished = listing?.id && listing?.attributes?.state !== LISTING_STATE_DRAFT;
   const price = listing?.attributes?.price;
   const currentStock = listing?.currentStock;
@@ -46,7 +46,15 @@ const getInitialValues = props => {
       : 1;
   const stockTypeInfinity = [];
 
-  return { price, stock, stockTypeInfinity };
+  // Convert shipping price from subunits to Money object
+  const currency = price?.currency || marketplaceCurrency;
+  const { shippingPriceInSubunitsOneItem } = publicData || {};
+  const shippingOneItemAsMoney =
+    shippingPriceInSubunitsOneItem != null
+      ? new Money(shippingPriceInSubunitsOneItem, currency)
+      : null;
+
+  return { price, stock, stockTypeInfinity, shippingPriceInSubunitsOneItem: shippingOneItemAsMoney };
 };
 
 /**
@@ -135,7 +143,18 @@ const EditListingPricingAndStockPanel = props => {
           className={css.form}
           initialValues={initialValues}
           onSubmit={values => {
-            const { price, stock, stockTypeInfinity } = values;
+            const { price, stock, stockTypeInfinity, shippingPriceInSubunitsOneItem } = values;
+
+            // Handle shipping price data
+            const shippingDataMaybe =
+              shippingPriceInSubunitsOneItem != null
+                ? {
+                    // Note: we only save the "amount" because currency should not differ from listing's price.
+                    // Money is always dealt in subunits (e.g. cents) to avoid float calculations.
+                    shippingPriceInSubunitsOneItem: shippingPriceInSubunitsOneItem.amount,
+                    shippingEnabled: true,
+                  }
+                : {};
 
             // Update stock only if the value has changed, or stock is infinity in stockType,
             // but not current stock is a small number (might happen with old listings)
@@ -168,6 +187,10 @@ const EditListingPricingAndStockPanel = props => {
             const updateValues = {
               price,
               ...stockUpdateMaybe,
+              publicData: {
+                ...publicData,
+                ...shippingDataMaybe,
+              },
             };
             // Save the initialValues to state
             // Otherwise, re-rendering would overwrite the values during XHR call.
@@ -176,6 +199,7 @@ const EditListingPricingAndStockPanel = props => {
                 price,
                 stock: stockUpdateMaybe?.stockUpdate?.newTotal || stock,
                 stockTypeInfinity,
+                shippingPriceInSubunitsOneItem,
               },
             });
             onSubmit(updateValues);

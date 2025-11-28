@@ -24,11 +24,38 @@
   }
 }
 
+.fixedRentalNotice {
+  composes: marketplaceTinyFontStyles from global;
+  background-color: var(--colorGrey50);
+  border: 1px solid var(--colorGrey100);
+  border-radius: 4px;
+  padding: 12px 16px;
+  margin: 0 24px 16px 24px;
+  text-align: center;
+  color: var(--colorGrey700);
+  font-weight: var(--fontWeightMedium);
+
+  @media (--viewportMedium) {
+    margin: 0 0 16px 0;
+  }
+}
+
 .bookingDates {
   flex-shrink: 0;
 
   /* Ensure that calendar dropdown gets some stacking context relative to other form items below */
   z-index: 1;
+}
+
+.infoButtonContainer {
+  margin: 12px 24px 0 24px;
+  position: relative;
+  display: flex;
+  justify-content: center;
+
+  @media (--viewportMedium) {
+    margin: 12px 0 0 0;
+  }
 }
 
 .priceBreakdownContainer {
@@ -60,6 +87,19 @@
 .finePrint {
   composes: marketplaceTinyFontStyles from global;
   text-align: center;
+  margin-bottom: 4px;
+}
+
+.lenderResponseInfo {
+  composes: marketplaceTinyFontStyles from global;
+  text-align: center;
+  color: var(--colorGrey500);
+  margin: 0 24px;
+  padding: 0;
+
+  @media (--viewportMedium) {
+    margin: 0;
+  }
 }
 
 .submitButton {

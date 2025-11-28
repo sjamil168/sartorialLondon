@@ -273,6 +273,18 @@ const EditListingAvailabilityPanel = props => {
         )}
       </H3>
 
+      {/* Info box explaining the 5-day rental model for daily rentals */}
+      {unitType === DAY ? (
+        <div className={css.rentalInfoBox}>
+          <p className={css.rentalInfoTitle}>
+            <FormattedMessage id="EditListingAvailabilityPanel.fiveDayRentalTitle" />
+          </p>
+          <p className={css.rentalInfoDescription}>
+            <FormattedMessage id="EditListingAvailabilityPanel.fiveDayRentalDescription" />
+          </p>
+        </div>
+      ) : null}
+
       <div className={css.planInfo}>
         {!hasAvailabilityPlan ? (
           <p>

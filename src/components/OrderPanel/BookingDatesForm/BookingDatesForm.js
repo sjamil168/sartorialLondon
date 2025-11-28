@@ -21,13 +21,16 @@ import { LINE_ITEM_DAY, propTypes } from '../../../util/types';
 import { timeSlotsPerDate } from '../../../util/generators';
 import { BOOKING_PROCESS_NAME } from '../../../transactions/transaction';
 
-import { Form, PrimaryButton, FieldDateRangePicker, FieldSelect, H6 } from '../../../components';
+import { Form, PrimaryButton, FieldDateRangePicker, FieldSelect, H6, RentalInfoPopup, RentalInfoButton } from '../../../components';
 
 import EstimatedCustomerBreakdownMaybe from '../EstimatedCustomerBreakdownMaybe';
 
 import css from './BookingDatesForm.module.css';
 
 const TODAY = new Date();
+
+// Fixed rental period: all rentals are exactly 5 days
+const FIXED_RENTAL_DAYS = 5;
 
 const nextMonthFn = (currentMoment, timeZone, offset = 1) =>
   getStartOf(currentMoment, 'month', timeZone, offset, 'months');
@@ -47,6 +50,49 @@ const getExclusiveEndDate = (date, timeZone) => {
 const getInclusiveEndDate = (date, timeZone) => {
   return getStartOf(date, 'day', timeZone, -1, 'days');
 };
+
+/**
+ * Calculate the fixed end date for a 5-day rental period.
+ * For daily bookings, start date is day 1, end date is day 5 (inclusive).
+ * API expects exclusive end date, so we return start + 5 days.
+ *
+ * @param {Date} startDate - The start date of the rental
+ * @param {string} timeZone - IANA timezone
+ * @returns {Date} The exclusive end date (5 days after start)
+ */
+const getFixedRentalEndDate = (startDate, timeZone) => {
+  if (!startDate) return null;
+  // For a 5-day rental: days 1,2,3,4,5 - exclusive end = start + 5
+  return getStartOf(startDate, 'day', timeZone, FIXED_RENTAL_DAYS, 'days');
+};
+
+/**
+ * Check if a full 5-day rental window is available starting from a given date.
+ * For daily rentals, we need ALL 5 consecutive days to be available.
+ *
+ * @param {Date} startDate - The potential start date
+ * @param {Object} timeSlotsData - Per-date availability data from timeSlotsPerDate()
+ * @param {string} timeZone - IANA timezone
+ * @returns {boolean} True if all 5 days are available, false otherwise
+ */
+const isFiveDayWindowAvailable = (startDate, timeSlotsData, timeZone) => {
+  if (!startDate || !timeSlotsData) return false;
+
+  // Check each of the 5 days (day 0 through day 4, inclusive)
+  for (let dayOffset = 0; dayOffset < FIXED_RENTAL_DAYS; dayOffset++) {
+    const dayToCheck = getStartOf(startDate, 'day', timeZone, dayOffset, 'days');
+    const dayIdString = stringifyDateToISO8601(dayToCheck, timeZone);
+    const dayData = timeSlotsData[dayIdString];
+
+    // If any day doesn't have availability data or is not available, return false
+    if (!dayData || dayData.hasAvailability !== true) {
+      return false;
+    }
+  }
+
+  return true;
+};
+
 /**
  * Get the range of months that we have already fetched time slots.
  * (This range expands when user clicks Next-button on date picker).
@@ -235,6 +281,10 @@ const isOutsideRangeFn = (
 /**
  * Returns an isDayBlocked function that can be passed to
  * a DateRangePicker component.
+ * 
+ * For daily rentals (5-day fixed rentals), this now checks if the ENTIRE 5-day
+ * window starting from the selected day is available. If any day in the 5-day
+ * window is unavailable, the start date will be blocked.
  */
 const isDayBlockedFn = params => {
   const { allTimeSlots, monthlyTimeSlots, isDaily, startDate, endDate, timeZone } = params || {};
@@ -268,7 +318,14 @@ const isDayBlockedFn = params => {
       return !(hasAvailability || timeSlotEndsOnThisDay);
     }
 
-    // Daily
+    // Daily rentals - Check if the full 5-day window is available
+    // Block any start date where the 5-day rental period cannot be completed
+    if (isDaily) {
+      const fiveDayWindowAvailable = isFiveDayWindowAvailable(dayInListingTZ, timeSlotsData, timeZone);
+      return !fiveDayWindowAvailable;
+    }
+
+    // Fallback for any other case
     return !hasAvailabilityOnDay;
   };
 };
@@ -539,6 +596,7 @@ export const BookingDatesForm = props => {
   } = props;
   const intl = useIntl();
   const [currentMonth, setCurrentMonth] = useState(getStartOf(TODAY, 'month', timeZone));
+  const [isInfoPopupOpen, setIsInfoPopupOpen] = useState(false);
   const initialValuesMaybe =
     priceVariants.length > 1 && preselectedPriceVariant
       ? { initialValues: { priceVariantName: preselectedPriceVariant?.name } }
@@ -707,20 +765,28 @@ export const BookingDatesForm = props => {
               />
             ) : null}
 
+            {/* Fixed 5-day rental notice for daily bookings */}
+            {isDaily ? (
+              <div className={css.fixedRentalNotice}>
+                <FormattedMessage id="BookingDatesForm.fixedRentalNotice" />
+              </div>
+            ) : null}
+
             <FieldDateRangePicker
               className={css.bookingDates}
               name="bookingDates"
               isDaily={isDaily}
               startDateId={`${formId}.bookingStartDate`}
               startDateLabel={intl.formatMessage({
-                id: 'BookingDatesForm.bookingStartTitle',
+                id: isDaily ? 'BookingDatesForm.rentalStartTitle' : 'BookingDatesForm.bookingStartTitle',
               })}
               startDatePlaceholderText={startDatePlaceholderText}
               endDateId={`${formId}.bookingEndDate`}
               endDateLabel={intl.formatMessage({
-                id: 'BookingDatesForm.bookingEndTitle',
+                id: isDaily ? 'BookingDatesForm.rentalEndTitle' : 'BookingDatesForm.bookingEndTitle',
               })}
               endDatePlaceholderText={endDatePlaceholderText}
+              endDateReadOnly={isDaily} // For daily rentals, end date is auto-calculated (5 days)
               format={v => {
                 const { startDate, endDate } = v || {};
                 // Format the Final Form field's value for the DateRangePicker
@@ -769,27 +835,77 @@ export const BookingDatesForm = props => {
               }}
               onChange={values => {
                 const { startDate: startDateFromValues, endDate: endDateFromValues } = values || {};
-                const { startDate, endDate } = values
-                  ? getStartAndEndOnTimeZone(
-                      startDateFromValues,
-                      endDateFromValues,
-                      isDaily,
-                      timeZone
-                    )
-                  : {};
-                if (seatsEnabled) {
-                  formApi.change('seats', 1);
+                
+                // For daily bookings (rentals), ALWAYS enforce the fixed 5-day rental period
+                // This ensures the end date is always start + 5 days, regardless of user selection
+                if (isDaily && startDateFromValues) {
+                  // Parse start date to listing timezone
+                  const parsedStart = getStartOf(
+                    timeOfDayFromLocalToTimeZone(startDateFromValues, timeZone),
+                    'day',
+                    timeZone
+                  );
+                  
+                  // Calculate fixed 5-day end date (exclusive for API)
+                  // All rentals are exactly 5 days - this cannot be changed by the user
+                  const fixedEndDate = getFixedRentalEndDate(parsedStart, timeZone);
+                  
+                  // Use setTimeout to defer form update after DateRangePicker's internal state settles
+                  setTimeout(() => {
+                    formApi.change('bookingDates', {
+                      startDate: parsedStart,
+                      endDate: fixedEndDate,
+                    });
+                    
+                    if (seatsEnabled) {
+                      formApi.change('seats', 1);
+                    }
+                    
+                    // Fetch line items with the calculated dates
+                    onHandleFetchLineItems({
+                      values: {
+                        priceVariantName,
+                        startDate: parsedStart,
+                        endDate: fixedEndDate,
+                        seats: seatsEnabled ? 1 : undefined,
+                      },
+                    });
+                  }, 0);
+                } else {
+                  // Non-daily bookings (nightly, hourly, etc.): use standard behavior
+                  const { startDate, endDate } = values
+                    ? getStartAndEndOnTimeZone(
+                        startDateFromValues,
+                        endDateFromValues,
+                        isDaily,
+                        timeZone
+                      )
+                    : {};
+                  if (seatsEnabled) {
+                    formApi.change('seats', 1);
+                  }
+                  onHandleFetchLineItems({
+                    values: {
+                      priceVariantName,
+                      startDate,
+                      endDate,
+                      seats: seatsEnabled ? 1 : undefined,
+                    },
+                  });
                 }
-                onHandleFetchLineItems({
-                  values: {
-                    priceVariantName,
-                    startDate,
-                    endDate,
-                    seats: seatsEnabled ? 1 : undefined,
-                  },
-                });
               }}
             />
+
+            {/* Info button and popup for daily rentals */}
+            {isDaily ? (
+              <div className={css.infoButtonContainer}>
+                <RentalInfoButton onClick={() => setIsInfoPopupOpen(true)} />
+                <RentalInfoPopup
+                  isOpen={isInfoPopupOpen}
+                  onClose={() => setIsInfoPopupOpen(false)}
+                />
+              </div>
+            ) : null}
 
             {seatsEnabled ? (
               <FieldSelect
@@ -865,6 +981,12 @@ export const BookingDatesForm = props => {
                 />
               )}
             </p>
+            {/* Additional info about lender response time for rentals */}
+            {isDaily && !isOwnListing && !payoutDetailsWarning ? (
+              <p className={css.lenderResponseInfo}>
+                <FormattedMessage id="BookingDatesForm.lenderResponseInfo" />
+              </p>
+            ) : null}
           </Form>
         );
       }}

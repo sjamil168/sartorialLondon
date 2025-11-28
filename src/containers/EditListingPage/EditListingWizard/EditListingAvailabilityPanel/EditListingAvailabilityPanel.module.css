@@ -41,6 +41,34 @@
   }
 }
 
+/* Info box explaining the fixed 5-day rental model */
+.rentalInfoBox {
+  background-color: var(--colorGrey50);
+  border: 1px solid var(--colorGrey200);
+  border-left: 4px solid var(--marketplaceColor);
+  border-radius: 4px;
+  padding: 16px;
+  margin-bottom: 24px;
+
+  @media (--viewportMedium) {
+    margin-bottom: 20px;
+  }
+}
+
+.rentalInfoTitle {
+  composes: h5 from global;
+  color: var(--marketplaceColor);
+  margin: 0 0 8px 0;
+  font-weight: var(--fontWeightSemiBold);
+}
+
+.rentalInfoDescription {
+  composes: marketplaceSmallFontStyles from global;
+  color: var(--colorGrey700);
+  margin: 0;
+  line-height: 1.5;
+}
+
 .section {
   margin: 0 0 24px 0;
 

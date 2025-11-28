@@ -49,6 +49,7 @@ export const DateRangePicker = props => {
     onClose,
     value,
     readOnly,
+    endDateReadOnly, // For fixed rental periods, make end date input read-only
     ...rest
   } = props;
 
@@ -213,15 +214,28 @@ export const DateRangePicker = props => {
     }
   };
   const disabled = props.disabled;
-  const inputProps = {
+  const startInputProps = {
     type: 'text',
     onChange: handleOnChangeOnInput,
     onKeyDown: handleOnKeyDownOnInput,
     ...(readOnly ? { readOnly } : {}),
     ...(disabled ? { disabled } : {}),
   };
+  // For fixed rental periods (like 5-day rentals), the end date is auto-calculated
+  // and should not be editable by the user
+  const endInputProps = {
+    type: 'text',
+    onChange: endDateReadOnly ? undefined : handleOnChangeOnInput,
+    onKeyDown: endDateReadOnly ? undefined : handleOnKeyDownOnInput,
+    readOnly: endDateReadOnly || readOnly,
+    ...(disabled ? { disabled } : {}),
+  };
   const inputClasses = classNames(css.input, inputClassName, {
     [css.inputPlaceholder]: !value || value.length === 0,
+  });
+  const endInputClasses = classNames(css.input, inputClassName, {
+    [css.inputPlaceholder]: !value || value.length === 0,
+    [css.inputReadOnly]: endDateReadOnly,
   });
 
   return (
@@ -235,15 +249,15 @@ export const DateRangePicker = props => {
               placeholder={startDatePlaceholderText}
               value={dateRangeData.formatted[0] || ''}
               data-type={INPUT_START}
-              {...inputProps}
+              {...startInputProps}
             />
             <input
               id={endDateId}
-              className={inputClasses}
+              className={endInputClasses}
               placeholder={endDatePlaceholderText}
               value={dateRangeData.formatted[1] || ''}
               data-type={INPUT_END}
-              {...inputProps}
+              {...endInputProps}
             />
           </div>
         </div>

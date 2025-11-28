@@ -51,6 +51,13 @@
   }
 }
 
+/* Read-only style for auto-calculated end dates (e.g., fixed 5-day rentals) */
+.inputReadOnly {
+  background-color: var(--colorGrey50);
+  cursor: default;
+  pointer-events: none;
+}
+
 .open {
   & input {
     border-radius: 6px 6px 0 0;

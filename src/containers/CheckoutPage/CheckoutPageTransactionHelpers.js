@@ -200,6 +200,7 @@ export const processCheckoutWithPayment = (orderParams, extraPaymentParams) => {
   const processAlias = pageData?.listing?.attributes?.publicData?.transactionProcessAlias;
 
   let createdPaymentIntent = null;
+  let customerPaymentMethodId = null; // Store the payment method for deposit
 
   ////////////////////////////////////////////////
   // Step 1: initiate order                     //
@@ -281,12 +282,30 @@ export const processCheckoutWithPayment = (orderParams, extraPaymentParams) => {
     // fnParams should contain { paymentIntent, transactionId } returned in step 2
     // Remember the created PaymentIntent for step 5
     createdPaymentIntent = fnParams.paymentIntent;
+    
+    // Capture the payment method ID for damage protection
+    // This can come from the paymentIntent response or from a previously saved card
+    customerPaymentMethodId = fnParams.paymentIntent?.payment_method || stripePaymentMethodId;
+    console.log('Payment method ID captured for damage protection:', customerPaymentMethodId);
+    
     const transactionId = fnParams.transactionId;
     const transitionName = process.transitions.CONFIRM_PAYMENT;
     const isTransitionedAlready = storedTx?.attributes?.lastTransition === transitionName;
+    
+    // Include the payment method ID in protectedData for damage protection
+    // This allows us to charge the customer later if there's damage
+    const transitionParams = customerPaymentMethodId ? {
+      protectedData: {
+        damageProtectionPaymentMethodId: customerPaymentMethodId,
+        damageProtectionSavedAt: new Date().toISOString(),
+      }
+    } : {};
+    
+    console.log('Confirm payment with params:', transitionParams);
+    
     const orderPromise = isTransitionedAlready
       ? Promise.resolve(storedTx)
-      : onConfirmPayment(transactionId, transitionName, {});
+      : onConfirmPayment(transactionId, transitionName, transitionParams);
 
     orderPromise.then(order => {
       // Store the returned transaction (order)
@@ -294,6 +313,25 @@ export const processCheckoutWithPayment = (orderParams, extraPaymentParams) => {
     });
 
     return orderPromise;
+  };
+
+  ///////////////////////////////////////////////////
+  // Step 3.5: Damage protection confirmation      //
+  // Payment method is already saved in step 3     //
+  ///////////////////////////////////////////////////
+  const fnSaveCardForDamageProtection = fnParams => {
+    // Payment method was already saved in step 3's protectedData
+    // This step just logs confirmation and passes through
+    const order = fnParams;
+    const hasPaymentMethod = !!customerPaymentMethodId;
+    
+    console.log('Damage protection status:', {
+      transactionId: order?.id?.uuid,
+      paymentMethodSaved: hasPaymentMethod,
+      paymentMethodId: customerPaymentMethodId ? `${customerPaymentMethodId.substring(0, 10)}...` : null,
+    });
+    
+    return Promise.resolve({ ...fnParams, cardSavedForDamageProtection: hasPaymentMethod });
   };
 
   //////////////////////////////////
@@ -332,12 +370,14 @@ export const processCheckoutWithPayment = (orderParams, extraPaymentParams) => {
   // fnRequestPayment({...initialParams})
   //   .then(result => fnConfirmCardPayment({...result}))
   //   .then(result => fnConfirmPayment({...result}))
+  //   .then(result => fnSaveCardForDamageProtection({...result}))
   const applyAsync = (acc, val) => acc.then(val);
   const composeAsync = (...funcs) => x => funcs.reduce(applyAsync, Promise.resolve(x));
   const handlePaymentIntentCreation = composeAsync(
     fnRequestPayment,
     fnConfirmCardPayment,
     fnConfirmPayment,
+    fnSaveCardForDamageProtection, // Save card for damage protection (instead of deposit hold)
     fnSendMessage,
     fnSavePaymentMethod
   );

@@ -48,7 +48,27 @@ export const transitions = {
   // Admin can also cancel the transition.
   CANCEL: 'transition/cancel',
 
-  // The backend will mark the transaction completed.
+  // ====================================
+  // RENTAL WORKFLOW TRANSITIONS
+  // ====================================
+  
+  // Provider marks item as sent to customer
+  MARK_SENT: 'transition/mark-sent',
+  OPERATOR_MARK_SENT: 'transition/operator-mark-sent',
+  
+  // Customer confirms they received the item
+  CONFIRM_RECEIVED: 'transition/confirm-received',
+  AUTO_CONFIRM_RECEIVED: 'transition/auto-confirm-received',
+  
+  // Customer marks item as returned (shipped back)
+  MARK_RETURNED: 'transition/mark-returned',
+  
+  // Provider confirms they received the return - triggers payout
+  CONFIRM_RETURN_RECEIVED: 'transition/confirm-return-received',
+  OPERATOR_CONFIRM_RETURN_RECEIVED: 'transition/operator-confirm-return-received',
+  AUTO_CONFIRM_RETURN_RECEIVED: 'transition/auto-confirm-return-received',
+
+  // The backend will mark the transaction completed (fallback if provider doesn't mark sent)
   COMPLETE: 'transition/complete',
   OPERATOR_COMPLETE: 'transition/operator-complete',
 
@@ -83,6 +103,12 @@ export const states = {
   ACCEPTED: 'accepted',
   EXPIRED: 'expired',
   CANCELED: 'canceled',
+  
+  // Rental workflow states
+  SENT: 'sent',
+  CUSTOMER_RECEIVED: 'customer-received',
+  CUSTOMER_RETURNED: 'customer-returned',
+  
   DELIVERED: 'delivered',
   REVIEWED: 'reviewed',
   REVIEWED_BY_CUSTOMER: 'reviewed-by-customer',
@@ -102,7 +128,7 @@ export const graph = {
   // id is defined only to support Xstate format.
   // However if you have multiple transaction processes defined,
   // it is best to keep them in sync with transaction process aliases.
-  id: 'default-booking/release-1',
+  id: 'default-booking/release-2',
 
   // This 'initial' state is a starting point for new transaction
   initial: states.INITIAL,
@@ -144,8 +170,36 @@ export const graph = {
     [states.ACCEPTED]: {
       on: {
         [transitions.CANCEL]: states.CANCELED,
+        // Provider marks item as sent
+        [transitions.MARK_SENT]: states.SENT,
+        [transitions.OPERATOR_MARK_SENT]: states.SENT,
+        // Fallback: auto-complete after 30 days if provider never marks as sent
         [transitions.COMPLETE]: states.DELIVERED,
         [transitions.OPERATOR_COMPLETE]: states.DELIVERED,
+      },
+    },
+
+    // Rental workflow: Item has been sent to customer
+    [states.SENT]: {
+      on: {
+        [transitions.CONFIRM_RECEIVED]: states.CUSTOMER_RECEIVED,
+        [transitions.AUTO_CONFIRM_RECEIVED]: states.CUSTOMER_RECEIVED,
+      },
+    },
+
+    // Rental workflow: Customer has received the item
+    [states.CUSTOMER_RECEIVED]: {
+      on: {
+        [transitions.MARK_RETURNED]: states.CUSTOMER_RETURNED,
+      },
+    },
+
+    // Rental workflow: Customer has returned the item
+    [states.CUSTOMER_RETURNED]: {
+      on: {
+        [transitions.CONFIRM_RETURN_RECEIVED]: states.DELIVERED,
+        [transitions.OPERATOR_CONFIRM_RETURN_RECEIVED]: states.DELIVERED,
+        [transitions.AUTO_CONFIRM_RETURN_RECEIVED]: states.DELIVERED,
       },
     },
 
@@ -188,6 +242,16 @@ export const isRelevantPastTransition = transition => {
     transitions.DECLINE,
     transitions.OPERATOR_DECLINE,
     transitions.EXPIRE,
+    // Rental workflow transitions
+    transitions.MARK_SENT,
+    transitions.OPERATOR_MARK_SENT,
+    transitions.CONFIRM_RECEIVED,
+    transitions.AUTO_CONFIRM_RECEIVED,
+    transitions.MARK_RETURNED,
+    transitions.CONFIRM_RETURN_RECEIVED,
+    transitions.OPERATOR_CONFIRM_RETURN_RECEIVED,
+    transitions.AUTO_CONFIRM_RETURN_RECEIVED,
+    // Reviews
     transitions.REVIEW_1_BY_CUSTOMER,
     transitions.REVIEW_1_BY_PROVIDER,
     transitions.REVIEW_2_BY_CUSTOMER,
@@ -224,6 +288,9 @@ export const isCompleted = transition => {
   const txCompletedTransitions = [
     transitions.COMPLETE,
     transitions.OPERATOR_COMPLETE,
+    transitions.CONFIRM_RETURN_RECEIVED,
+    transitions.OPERATOR_CONFIRM_RETURN_RECEIVED,
+    transitions.AUTO_CONFIRM_RETURN_RECEIVED,
     transitions.REVIEW_1_BY_CUSTOMER,
     transitions.REVIEW_1_BY_PROVIDER,
     transitions.REVIEW_2_BY_CUSTOMER,
@@ -247,4 +314,4 @@ export const isRefunded = transition => {
   return txRefundedTransitions.includes(transition);
 };
 
-export const statesNeedingProviderAttention = [states.PREAUTHORIZED];
+export const statesNeedingProviderAttention = [states.PREAUTHORIZED, states.CUSTOMER_RETURNED];

@@ -144,3 +144,33 @@ export const transitionPrivileged = body => {
 export const createUserWithIdp = body => {
   return post('/api/auth/create-user-with-idp', body);
 };
+
+// Save payment method for damage protection
+//
+// This saves the customer's payment method ID to the transaction's protectedData.
+// This allows the provider to charge the card later if there's damage to the item.
+//
+// See `server/api/save-payment-method.js` to see what data should be sent in the body.
+export const savePaymentMethodForDamageProtection = body => {
+  return post('/api/save-payment-method', body);
+};
+
+// Submit damage claim (Provider reporting returned item is damaged)
+//
+// This submits a damage claim for review by the marketplace owner.
+// The marketplace owner will then decide whether to charge the customer via Stripe Dashboard.
+//
+// See `server/api/submit-damage-claim.js` to see what data should be sent in the body.
+export const submitDamageClaim = body => {
+  return post('/api/submit-damage-claim', body);
+};
+
+// Report item issue (Renter reporting received item is damaged/stained)
+//
+// This reports an issue with a received item for review by the marketplace owner.
+// Used when a customer receives an item that is already damaged.
+//
+// See `server/api/report-item-issue.js` to see what data should be sent in the body.
+export const reportItemIssue = body => {
+  return post('/api/report-item-issue', body);
+};

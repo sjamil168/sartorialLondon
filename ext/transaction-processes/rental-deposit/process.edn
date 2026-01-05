@@ -1,0 +1,97 @@
+{:format :v3,
+ :transitions
+ [;; ====================================
+  ;; INITIATE DEPOSIT: Customer requests deposit hold
+  ;; Uses manual capture mode - card is authorized but not charged
+  ;; Uses :confirm :off-session to auto-confirm with saved payment method
+  ;; Goes directly to deposit-held state (skips pending-payment)
+  ;; ====================================
+  {:name :transition/request-deposit,
+   :actor :actor.role/customer,
+   :actions
+   [{:name :action/update-protected-data}
+    {:name :action/create-pending-booking, :config {:type :time}}
+    {:name :action/privileged-set-line-items}
+    {:name :action/stripe-create-payment-intent, 
+     :config {:capture-method :manual, :confirm :off-session}}
+    {:name :action/accept-booking}],
+   :to :state/deposit-held,
+   :privileged? true}
+
+  ;; ====================================
+  ;; RELEASE DEPOSIT: Provider releases the hold (refund authorization)
+  ;; Called automatically when rental return is confirmed
+  ;; ====================================
+  {:name :transition/release-deposit,
+   :actor :actor.role/provider,
+   :actions
+   [{:name :action/calculate-full-refund}
+    {:name :action/stripe-refund-payment}],
+   :from :state/deposit-held,
+   :to :state/deposit-released}
+
+  {:name :transition/operator-release-deposit,
+   :actor :actor.role/operator,
+   :actions
+   [{:name :action/calculate-full-refund}
+    {:name :action/stripe-refund-payment}],
+   :from :state/deposit-held,
+   :to :state/deposit-released}
+
+  ;; ====================================
+  ;; CAPTURE DEPOSIT: Provider captures the deposit (charge the card)
+  ;; Used when item is damaged or not returned
+  ;; ====================================
+  {:name :transition/capture-deposit,
+   :actor :actor.role/provider,
+   :actions [{:name :action/stripe-capture-payment-intent}],
+   :from :state/deposit-held,
+   :to :state/deposit-captured}
+
+  {:name :transition/operator-capture-deposit,
+   :actor :actor.role/operator,
+   :actions [{:name :action/stripe-capture-payment-intent}],
+   :from :state/deposit-held,
+   :to :state/deposit-captured}
+
+  ;; ====================================
+  ;; AUTO-CAPTURE: Safety net before Stripe authorization expires (7 days)
+  ;; Captures at 6 days 23 hours 50 minutes
+  ;; ====================================
+  {:name :transition/auto-capture-deposit,
+   :at
+   {:fn/plus
+    [{:fn/timepoint [:time/first-entered-state :state/deposit-held]}
+     {:fn/period ["P6DT23H50M"]}]},
+   :actions [{:name :action/stripe-capture-payment-intent}],
+   :from :state/deposit-held,
+   :to :state/deposit-captured}],
+
+ :notifications
+ [;; Notify customer when deposit is held (now on request-deposit)
+  {:name :notification/deposit-held,
+   :on :transition/request-deposit,
+   :to :actor.role/customer,
+   :template :deposit-held}
+  ;; Notify customer when deposit is released
+  {:name :notification/deposit-released,
+   :on :transition/release-deposit,
+   :to :actor.role/customer,
+   :template :deposit-released}
+  {:name :notification/deposit-released-operator,
+   :on :transition/operator-release-deposit,
+   :to :actor.role/customer,
+   :template :deposit-released}
+  ;; Notify customer when deposit is captured
+  {:name :notification/deposit-captured,
+   :on :transition/capture-deposit,
+   :to :actor.role/customer,
+   :template :deposit-captured}
+  {:name :notification/deposit-captured-operator,
+   :on :transition/operator-capture-deposit,
+   :to :actor.role/customer,
+   :template :deposit-captured}
+  {:name :notification/deposit-captured-auto,
+   :on :transition/auto-capture-deposit,
+   :to :actor.role/customer,
+   :template :deposit-captured}]}

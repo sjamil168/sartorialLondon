@@ -873,25 +873,25 @@ export const BookingDatesForm = props => {
                   }, 0);
                 } else {
                   // Non-daily bookings (nightly, hourly, etc.): use standard behavior
-                  const { startDate, endDate } = values
-                    ? getStartAndEndOnTimeZone(
-                        startDateFromValues,
-                        endDateFromValues,
-                        isDaily,
-                        timeZone
-                      )
-                    : {};
-                  if (seatsEnabled) {
-                    formApi.change('seats', 1);
-                  }
-                  onHandleFetchLineItems({
-                    values: {
-                      priceVariantName,
-                      startDate,
-                      endDate,
-                      seats: seatsEnabled ? 1 : undefined,
-                    },
-                  });
+                const { startDate, endDate } = values
+                  ? getStartAndEndOnTimeZone(
+                      startDateFromValues,
+                      endDateFromValues,
+                      isDaily,
+                      timeZone
+                    )
+                  : {};
+                if (seatsEnabled) {
+                  formApi.change('seats', 1);
+                }
+                onHandleFetchLineItems({
+                  values: {
+                    priceVariantName,
+                    startDate,
+                    endDate,
+                    seats: seatsEnabled ? 1 : undefined,
+                  },
+                });
                 }
               }}
             />

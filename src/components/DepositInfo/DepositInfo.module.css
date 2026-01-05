@@ -1,0 +1,98 @@
+.root {
+  background-color: var(--colorGrey50);
+  border: 1px solid var(--colorGrey200);
+  border-radius: 8px;
+  padding: 16px;
+  margin: 16px 0;
+}
+
+/* Card saved section */
+.cardSaved {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.cardIcon {
+  font-size: 24px;
+  line-height: 1;
+}
+
+.cardInfo {
+  flex: 1;
+}
+
+.description {
+  composes: marketplaceSmallFontStyles from global;
+  color: var(--colorGrey700);
+  margin: 0 0 8px 0;
+  line-height: 1.4;
+}
+
+.status {
+  composes: marketplaceTinyFontStyles from global;
+  margin: 0;
+  padding: 4px 10px;
+  border-radius: 12px;
+  display: inline-block;
+  font-weight: var(--fontWeightSemiBold);
+}
+
+.statusActive {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.statusPending {
+  background-color: var(--colorGrey200);
+  color: var(--colorGrey700);
+}
+
+.statusSuccess {
+  color: #2e7d32;
+}
+
+/* Charges section */
+.chargesSection {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--colorGrey200);
+}
+
+.chargesTitle {
+  composes: marketplaceSmallFontStyles from global;
+  font-weight: var(--fontWeightSemiBold);
+  margin: 0 0 12px 0;
+  color: var(--colorGrey900);
+}
+
+.chargeItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--colorGrey100);
+}
+
+.chargeItem:last-child {
+  border-bottom: none;
+}
+
+.chargeAmount {
+  font-weight: var(--fontWeightSemiBold);
+  color: var(--colorGrey900);
+  min-width: 70px;
+}
+
+.chargeReason {
+  flex: 1;
+  color: var(--colorGrey600);
+  font-size: 14px;
+}
+
+.chargeStatus {
+  font-size: 12px;
+  font-weight: var(--fontWeightMedium);
+}
+
+

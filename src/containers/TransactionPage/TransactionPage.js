@@ -52,6 +52,8 @@ import {
   fetchMoreMessages,
   fetchTimeSlots,
   fetchTransactionLineItems,
+  submitDamageClaim,
+  reportItemIssue,
 } from './TransactionPage.duck';
 import css from './TransactionPage.module.css';
 import { getCurrentUserTypeRoles, hasPermissionToViewData } from '../../util/userHelpers.js';
@@ -159,6 +161,12 @@ export const TransactionPageComponent = props => {
     nextTransitions,
     callSetInitialValues,
     onInitializeCardPaymentData,
+    submitDamageClaimInProgress,
+    submitDamageClaimError,
+    onSubmitDamageClaim,
+    reportItemIssueInProgress,
+    reportItemIssueError,
+    onReportItemIssue,
     ...restOfProps
   } = props;
 
@@ -490,6 +498,13 @@ export const TransactionPageComponent = props => {
       transactionRole={transactionRole}
       showBookingLocation={showBookingLocation}
       hasViewingRights={hasViewingRights}
+      transaction={transaction}
+      submitDamageClaimInProgress={submitDamageClaimInProgress}
+      submitDamageClaimError={submitDamageClaimError}
+      onSubmitDamageClaim={onSubmitDamageClaim}
+      reportItemIssueInProgress={reportItemIssueInProgress}
+      reportItemIssueError={reportItemIssueError}
+      onReportItemIssue={onReportItemIssue}
       activityFeed={
         <ActivityFeed
           messages={messages}
@@ -609,6 +624,13 @@ const mapStateToProps = state => {
     lineItems,
     fetchLineItemsInProgress,
     fetchLineItemsError,
+    depositTransaction,
+    fetchDepositInProgress,
+    fetchDepositError,
+    submitDamageClaimInProgress,
+    submitDamageClaimError,
+    reportItemIssueInProgress,
+    reportItemIssueError,
   } = state.TransactionPage;
   const { currentUser } = state.user;
 
@@ -639,6 +661,13 @@ const mapStateToProps = state => {
     lineItems, // for OrderPanel
     fetchLineItemsInProgress, // for OrderPanel
     fetchLineItemsError, // for OrderPanel
+    depositTransaction,
+    fetchDepositInProgress,
+    fetchDepositError,
+    submitDamageClaimInProgress,
+    submitDamageClaimError,
+    reportItemIssueInProgress,
+    reportItemIssueError,
   };
 };
 
@@ -658,6 +687,8 @@ const mapDispatchToProps = dispatch => {
       dispatch(fetchTransactionLineItems(orderData, listingId, isOwnListing)), // for OrderPanel
     onFetchTimeSlots: (listingId, start, end, timeZone, options) =>
       dispatch(fetchTimeSlots(listingId, start, end, timeZone, options)), // for OrderPanel
+    onSubmitDamageClaim: params => dispatch(submitDamageClaim(params)),
+    onReportItemIssue: params => dispatch(reportItemIssue(params)),
   };
 };
 

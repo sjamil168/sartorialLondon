@@ -122,6 +122,7 @@ export { default as UserNav } from './UserNav/UserNav';
 export { default as Avatar, AvatarSmall, AvatarMedium, AvatarLarge } from './Avatar/Avatar';
 export { default as CustomExtendedDataField } from './CustomExtendedDataField/CustomExtendedDataField';
 export { default as OrderBreakdown } from './OrderBreakdown/OrderBreakdown';
+export { default as DepositInfo } from './DepositInfo/DepositInfo';
 export { default as OrderPanel } from './OrderPanel/OrderPanel';
 export { default as ListingCard } from './ListingCard/ListingCard';
 export { default as Map } from './Map/Map';

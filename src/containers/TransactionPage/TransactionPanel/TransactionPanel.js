@@ -8,7 +8,7 @@ import { userDisplayNameAsString } from '../../../util/data';
 import { isMobileSafari } from '../../../util/userAgent';
 import { createSlug } from '../../../util/urlHelpers';
 
-import { AvatarLarge, NamedLink, UserDisplayName } from '../../../components';
+import { AvatarLarge, NamedLink, UserDisplayName, DepositInfo } from '../../../components';
 
 import { stateDataShape } from '../TransactionPage.stateData';
 import SendMessageForm from '../SendMessageForm/SendMessageForm';
@@ -151,6 +151,7 @@ export class TransactionPanelComponent extends Component {
       className,
       currentUser,
       transactionRole,
+      transaction,
       listing,
       customer,
       provider,
@@ -204,6 +205,7 @@ export class TransactionPanelComponent extends Component {
         secondaryButtonProps={stateData?.secondaryButtonProps}
         isListingDeleted={listingDeleted}
         isProvider={isProvider}
+        processState={stateData.processState}
       />
     );
 
@@ -384,6 +386,27 @@ export class TransactionPanelComponent extends Component {
                   processName={stateData.processName}
                   priceVariantName={priceVariantName}
                 />
+
+                {/* Damage Protection Info - shows card saved status */}
+                <DepositInfo
+                  transaction={transaction}
+                  isProvider={isProvider}
+                  damageCharges={transaction?.attributes?.metadata?.damageCharges}
+                />
+
+                {/* Support Contact Line */}
+                <div className={css.supportContactLine}>
+                  <FormattedMessage 
+                    id="TransactionPanel.supportContact" 
+                    values={{
+                      email: (
+                        <a href="mailto:hello@sartorial.com" className={css.supportEmail}>
+                          hello@sartorial.com
+                        </a>
+                      ),
+                    }}
+                  />
+                </div>
 
                 {stateData.showActionButtons ? (
                   <div className={css.desktopActionButtons}>{actionButtons}</div>

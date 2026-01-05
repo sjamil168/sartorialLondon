@@ -609,3 +609,51 @@
     margin-top: 16px;
   }
 }
+
+/* Support Contact Line */
+.supportContactLine {
+  margin-top: 20px;
+  padding: 16px;
+  background-color: var(--colorGrey50);
+  border-radius: var(--borderRadiusMedium);
+  text-align: center;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--colorGrey600);
+}
+
+.supportEmail {
+  color: var(--marketplaceColor);
+  font-weight: var(--fontWeightSemiBold);
+  text-decoration: none;
+}
+
+.supportEmail:hover {
+  text-decoration: underline;
+}
+
+/* Action Reminder Messages - styled to match marketplace theme */
+.actionReminder {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background-color: var(--colorGrey50);
+  border-left: 3px solid var(--marketplaceColor);
+  border-radius: var(--borderRadiusMedium);
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+
+.actionReminderIcon {
+  font-size: 20px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.actionReminderText {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--colorGrey700);
+  font-weight: var(--fontWeightMedium);
+}

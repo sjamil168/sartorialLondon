@@ -1,5 +1,6 @@
 import React from 'react';
 import classNames from 'classnames';
+import { FormattedMessage } from '../../../util/reactIntl';
 
 import { PrimaryButton, SecondaryButton } from '../../../components';
 
@@ -15,6 +16,7 @@ const ActionButtonsMaybe = props => {
     secondaryButtonProps,
     isListingDeleted,
     isProvider,
+    processState,
   } = props;
 
   // In default processes default processes need special handling
@@ -25,6 +27,39 @@ const ActionButtonsMaybe = props => {
   }
 
   const buttonsDisabled = primaryButtonProps?.inProgress || secondaryButtonProps?.inProgress;
+
+  // Determine which reminder message to show based on state and role
+  const getReminderMessage = () => {
+    if (isProvider) {
+      // Provider reminders
+      if (processState === 'preauthorized') {
+        // Before accepting a request
+        return {
+          icon: '📹',
+          messageId: 'ActionButtonsMaybe.providerAcceptReminder',
+        };
+      }
+      if (processState === 'accepted') {
+        // Before marking as sent
+        return {
+          icon: '📦',
+          messageId: 'ActionButtonsMaybe.providerSentReminder',
+        };
+      }
+    } else {
+      // Customer reminders
+      if (processState === 'sent') {
+        // Before confirming received
+        return {
+          icon: '📸',
+          messageId: 'ActionButtonsMaybe.customerReceivedReminder',
+        };
+      }
+    }
+    return null;
+  };
+
+  const reminderInfo = getReminderMessage();
 
   const primaryButton = primaryButtonProps ? (
     <PrimaryButton
@@ -56,6 +91,15 @@ const ActionButtonsMaybe = props => {
 
   return showButtons ? (
     <div className={classes}>
+      {/* Reminder message */}
+      {reminderInfo && (
+        <div className={css.actionReminder}>
+          <span className={css.actionReminderIcon}>{reminderInfo.icon}</span>
+          <p className={css.actionReminderText}>
+            <FormattedMessage id={reminderInfo.messageId} />
+          </p>
+        </div>
+      )}
       <div className={css.actionErrors}>
         {primaryErrorMessage}
         {secondaryErrorMessage}

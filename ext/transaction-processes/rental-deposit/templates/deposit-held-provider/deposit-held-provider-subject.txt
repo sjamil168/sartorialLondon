@@ -1,0 +1,1 @@
+{{t "DepositHeldProvider.subject" marketplace=marketplace.name listing-title=listing.title}}

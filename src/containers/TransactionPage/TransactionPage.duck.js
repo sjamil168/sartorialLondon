@@ -11,7 +11,7 @@ import {
   stringifyDateToISO8601,
 } from '../../util/dates';
 import { isTransactionsTransitionInvalidTransition, storableError } from '../../util/errors';
-import { transactionLineItems } from '../../util/api';
+import { transactionLineItems, submitDamageClaim as submitDamageClaimApi, reportItemIssue as reportItemIssueApi } from '../../util/api';
 import * as log from '../../util/log';
 import {
   updatedEntities,
@@ -89,6 +89,18 @@ export const FETCH_LINE_ITEMS_REQUEST = 'app/TransactionPage/FETCH_LINE_ITEMS_RE
 export const FETCH_LINE_ITEMS_SUCCESS = 'app/TransactionPage/FETCH_LINE_ITEMS_SUCCESS';
 export const FETCH_LINE_ITEMS_ERROR = 'app/TransactionPage/FETCH_LINE_ITEMS_ERROR';
 
+export const FETCH_DEPOSIT_REQUEST = 'app/TransactionPage/FETCH_DEPOSIT_REQUEST';
+export const FETCH_DEPOSIT_SUCCESS = 'app/TransactionPage/FETCH_DEPOSIT_SUCCESS';
+export const FETCH_DEPOSIT_ERROR = 'app/TransactionPage/FETCH_DEPOSIT_ERROR';
+
+export const SUBMIT_DAMAGE_CLAIM_REQUEST = 'app/TransactionPage/SUBMIT_DAMAGE_CLAIM_REQUEST';
+export const SUBMIT_DAMAGE_CLAIM_SUCCESS = 'app/TransactionPage/SUBMIT_DAMAGE_CLAIM_SUCCESS';
+export const SUBMIT_DAMAGE_CLAIM_ERROR = 'app/TransactionPage/SUBMIT_DAMAGE_CLAIM_ERROR';
+
+export const REPORT_ITEM_ISSUE_REQUEST = 'app/TransactionPage/REPORT_ITEM_ISSUE_REQUEST';
+export const REPORT_ITEM_ISSUE_SUCCESS = 'app/TransactionPage/REPORT_ITEM_ISSUE_SUCCESS';
+export const REPORT_ITEM_ISSUE_ERROR = 'app/TransactionPage/REPORT_ITEM_ISSUE_ERROR';
+
 // ================ Reducer ================ //
 
 const initialState = {
@@ -116,6 +128,13 @@ const initialState = {
     //   fetchTimeSlotsInProgress: null,
     // },
   },
+  depositTransaction: null,
+  fetchDepositInProgress: false,
+  fetchDepositError: null,
+  submitDamageClaimInProgress: false,
+  submitDamageClaimError: null,
+  reportItemIssueInProgress: false,
+  reportItemIssueError: null,
   timeSlotsForDate: {
     // For small time units, we fetch monthly time slots with sparse mode for calendar view
     // and when the user clicks on a day, we make a full time slot query. This is for that purpose.
@@ -301,6 +320,27 @@ export default function transactionPageReducer(state = initialState, action = {}
     case FETCH_LINE_ITEMS_ERROR:
       return { ...state, fetchLineItemsInProgress: false, fetchLineItemsError: payload };
 
+    case FETCH_DEPOSIT_REQUEST:
+      return { ...state, fetchDepositInProgress: true, fetchDepositError: null };
+    case FETCH_DEPOSIT_SUCCESS:
+      return { ...state, fetchDepositInProgress: false, depositTransaction: payload };
+    case FETCH_DEPOSIT_ERROR:
+      return { ...state, fetchDepositInProgress: false, fetchDepositError: payload, depositTransaction: null };
+
+    case SUBMIT_DAMAGE_CLAIM_REQUEST:
+      return { ...state, submitDamageClaimInProgress: true, submitDamageClaimError: null };
+    case SUBMIT_DAMAGE_CLAIM_SUCCESS:
+      return { ...state, submitDamageClaimInProgress: false };
+    case SUBMIT_DAMAGE_CLAIM_ERROR:
+      return { ...state, submitDamageClaimInProgress: false, submitDamageClaimError: payload };
+
+    case REPORT_ITEM_ISSUE_REQUEST:
+      return { ...state, reportItemIssueInProgress: true, reportItemIssueError: null };
+    case REPORT_ITEM_ISSUE_SUCCESS:
+      return { ...state, reportItemIssueInProgress: false };
+    case REPORT_ITEM_ISSUE_ERROR:
+      return { ...state, reportItemIssueInProgress: false, reportItemIssueError: payload };
+
     default:
       return state;
   }
@@ -389,6 +429,21 @@ export const fetchLineItemsError = error => ({
   error: true,
   payload: error,
 });
+
+const fetchDepositRequest = () => ({ type: FETCH_DEPOSIT_REQUEST });
+const fetchDepositSuccess = depositTransaction => ({
+  type: FETCH_DEPOSIT_SUCCESS,
+  payload: depositTransaction,
+});
+const fetchDepositError = e => ({ type: FETCH_DEPOSIT_ERROR, error: true, payload: e });
+
+const submitDamageClaimRequest = () => ({ type: SUBMIT_DAMAGE_CLAIM_REQUEST });
+const submitDamageClaimSuccess = () => ({ type: SUBMIT_DAMAGE_CLAIM_SUCCESS });
+const submitDamageClaimError = e => ({ type: SUBMIT_DAMAGE_CLAIM_ERROR, error: true, payload: e });
+
+const reportItemIssueRequest = () => ({ type: REPORT_ITEM_ISSUE_REQUEST });
+const reportItemIssueSuccess = () => ({ type: REPORT_ITEM_ISSUE_SUCCESS });
+const reportItemIssueError = e => ({ type: REPORT_ITEM_ISSUE_ERROR, error: true, payload: e });
 
 // ================ Thunks ================ //
 
@@ -676,6 +731,10 @@ export const makeTransition = (txId, transitionName, params) => (dispatch, getSt
   }
   dispatch(transitionRequest(transitionName));
 
+  // Check if this is the "confirm-return-received" transition for a booking
+  // If so, we also need to release the security deposit
+  const isConfirmReturnReceived = transitionName === 'transition/confirm-return-received';
+
   return sdk.transactions
     .transition({ id: txId, transition: transitionName, params }, { expand: true })
     .then(response => {
@@ -683,13 +742,79 @@ export const makeTransition = (txId, transitionName, params) => (dispatch, getSt
       dispatch(transitionSuccess());
       dispatch(fetchCurrentUserNotifications());
 
-      // There could be automatic transitions after this transition
-      // For example mark-received-from-purchased > auto-complete.
-      // Here, we make 1-2 delayed updates for the tx entity.
-      // This way "leave a review" link should show up for the customer.
-      refreshTransactionEntity(sdk, txId, dispatch);
-
-      return response;
+      // If this is confirm-return-received, also release the deposit
+      if (isConfirmReturnReceived) {
+        console.log('Attempting to release deposit for rental:', txId.uuid);
+        
+        // Query all deposit transactions (sales for provider)
+        // Then filter to find the one linked to this rental
+        return sdk.transactions
+          .query({
+            only: 'sale', // Provider's sales
+            processName: 'rental-deposit',
+          })
+          .then(depositQueryResponse => {
+            const allDeposits = depositQueryResponse.data.data || [];
+            console.log('Found deposit transactions:', allDeposits.length);
+            
+            // Find the deposit linked to this rental transaction
+            const depositTx = allDeposits.find(tx => {
+              const protectedData = tx?.attributes?.protectedData || {};
+              return protectedData.rentalTransactionId === txId.uuid;
+            });
+            
+            if (depositTx) {
+              const lastTransition = depositTx?.attributes?.lastTransition;
+              console.log('Found linked deposit:', depositTx.id.uuid, 'state:', lastTransition);
+              
+              // Only release if deposit is in a state that can be released
+              // With the updated process, request-deposit goes directly to deposit-held
+              if (lastTransition === 'transition/request-deposit') {
+                return sdk.transactions
+                  .transition(
+                    {
+                      id: depositTx.id,
+                      transition: 'transition/release-deposit',
+                      params: {},
+                    },
+                    { expand: true }
+                  )
+                  .then(depositResponse => {
+                    console.log('Deposit released successfully');
+                    dispatch(addMarketplaceEntities(depositResponse));
+                    refreshTransactionEntity(sdk, txId, dispatch);
+                    return response;
+                  })
+                  .catch(depositError => {
+                    console.error('Failed to release deposit:', depositError);
+                    log.error(depositError, 'release-deposit-failed', {
+                      rentalTxId: txId,
+                      depositTxId: depositTx?.id,
+                    });
+                    refreshTransactionEntity(sdk, txId, dispatch);
+                    return response;
+                  });
+              } else {
+                console.log('Deposit not in held state, cannot release. State:', lastTransition);
+                refreshTransactionEntity(sdk, txId, dispatch);
+                return response;
+              }
+            } else {
+              console.log('No deposit found for this rental');
+              refreshTransactionEntity(sdk, txId, dispatch);
+              return response;
+            }
+          })
+          .catch(depositQueryError => {
+            console.error('Failed to query deposit transactions:', depositQueryError);
+            refreshTransactionEntity(sdk, txId, dispatch);
+            return response;
+          });
+      } else {
+        // Normal flow for other transitions
+        refreshTransactionEntity(sdk, txId, dispatch);
+        return response;
+      }
     })
     .catch(e => {
       dispatch(transitionError(storableError(e)));
@@ -882,9 +1007,83 @@ export const fetchTransactionLineItems = ({ orderData, listingId, isOwnListing }
     });
 };
 
+// Fetch deposit transaction linked to a rental transaction
+export const fetchDeposit = rentalTransactionId => (dispatch, getState, sdk) => {
+  dispatch(fetchDepositRequest());
+
+  // Query for deposit transactions with this rental transaction ID in protected data
+  return sdk.transactions
+    .query({
+      processAlias: 'rental-deposit/release-1',
+      include: ['listing', 'customer', 'provider'],
+    })
+    .then(response => {
+      // Find the deposit transaction that has this rental transaction ID
+      const depositTransactions = response.data.data || [];
+      const depositTx = depositTransactions.find(tx => {
+        const protectedData = tx?.attributes?.protectedData || {};
+        return protectedData.rentalTransactionId === rentalTransactionId.uuid;
+      });
+
+      if (depositTx) {
+        dispatch(addMarketplaceEntities(response));
+        dispatch(fetchDepositSuccess(depositTx));
+      } else {
+        dispatch(fetchDepositSuccess(null));
+      }
+      return depositTx || null;
+    })
+    .catch(e => {
+      // Don't fail if deposit isn't found - it might not exist yet
+      console.log('Deposit transaction not found or error:', e);
+      dispatch(fetchDepositError(storableError(e)));
+      return null;
+    });
+};
+
+// Submit damage claim for review by marketplace owner (Provider reports returned item is damaged)
+export const submitDamageClaim = ({ transactionId, description, estimatedCost }) => (dispatch, getState, sdk) => {
+  dispatch(submitDamageClaimRequest());
+
+  return submitDamageClaimApi({ transactionId, description, estimatedCost })
+    .then(response => {
+      dispatch(submitDamageClaimSuccess());
+      
+      // Refetch the transaction to get updated data
+      dispatch(fetchTransaction(new UUID(transactionId), null, {}));
+      
+      return response;
+    })
+    .catch(e => {
+      console.error('Failed to submit damage claim:', e);
+      dispatch(submitDamageClaimError(storableError(e)));
+      throw e;
+    });
+};
+
+// Report item issue (Renter reports received item has issues)
+export const reportItemIssue = ({ transactionId, description }) => (dispatch, getState, sdk) => {
+  dispatch(reportItemIssueRequest());
+
+  return reportItemIssueApi({ transactionId, description })
+    .then(response => {
+      dispatch(reportItemIssueSuccess());
+      
+      // Refetch the transaction to get updated data
+      dispatch(fetchTransaction(new UUID(transactionId), null, {}));
+      
+      return response;
+    })
+    .catch(e => {
+      console.error('Failed to report item issue:', e);
+      dispatch(reportItemIssueError(storableError(e)));
+      throw e;
+    });
+};
+
 // loadData is a collection of async calls that need to be made
 // before page has all the info it needs to render itself
-export const loadData = (params, search, config) => (dispatch, getState) => {
+export const loadData = (params, search, config) => (dispatch, getState, sdk) => {
   const txId = new UUID(params.id);
   const state = getState().TransactionPage;
   const txRef = state.transactionRef;
@@ -901,5 +1100,16 @@ export const loadData = (params, search, config) => (dispatch, getState) => {
     dispatch(fetchTransaction(txId, txRole, config)),
     dispatch(fetchMessages(txId, 1, config)),
     dispatch(fetchNextTransitions(txId)),
-  ]);
+  ]).then(([transactionResponse]) => {
+    // After fetching the main transaction, check if it's a booking and fetch deposit
+    const transaction = transactionResponse?.data?.data;
+    const processName = transaction?.attributes?.processName;
+    
+    if (isBookingProcess(processName)) {
+      // Fetch deposit transaction for booking transactions
+      dispatch(fetchDeposit(txId));
+    }
+    
+    return transactionResponse;
+  });
 };

@@ -56,6 +56,97 @@ export const getStateDataForBookingProcess = (txInfo, processInfo) => {
         secondaryButtonProps: secondary,
       };
     })
+    // ====================================
+    // RENTAL WORKFLOW: ACCEPTED STATE
+    // Provider can mark item as sent
+    // ====================================
+    .cond([states.ACCEPTED, PROVIDER], () => {
+      const primary = actionButtonProps(transitions.MARK_SENT, PROVIDER);
+      return {
+        processName,
+        processState,
+        showDetailCardHeadings: true,
+        showActionButtons: true,
+        primaryButtonProps: primary,
+      };
+    })
+    .cond([states.ACCEPTED, CUSTOMER], () => {
+      return { 
+        processName, 
+        processState, 
+        showDetailCardHeadings: true,
+        showExtraInfo: true, // Show info that lender will ship soon
+      };
+    })
+    // ====================================
+    // RENTAL WORKFLOW: SENT STATE
+    // Customer can confirm receipt
+    // ====================================
+    .cond([states.SENT, CUSTOMER], () => {
+      const primary = actionButtonProps(transitions.CONFIRM_RECEIVED, CUSTOMER);
+      return {
+        processName,
+        processState,
+        showDetailCardHeadings: true,
+        showActionButtons: true,
+        primaryButtonProps: primary,
+      };
+    })
+    .cond([states.SENT, PROVIDER], () => {
+      return { 
+        processName, 
+        processState, 
+        showDetailCardHeadings: true,
+        showExtraInfo: true, // Show info waiting for customer to confirm receipt
+      };
+    })
+    // ====================================
+    // RENTAL WORKFLOW: CUSTOMER_RECEIVED STATE
+    // Customer can mark item as returned
+    // ====================================
+    .cond([states.CUSTOMER_RECEIVED, CUSTOMER], () => {
+      const primary = actionButtonProps(transitions.MARK_RETURNED, CUSTOMER);
+      return {
+        processName,
+        processState,
+        showDetailCardHeadings: true,
+        showActionButtons: true,
+        primaryButtonProps: primary,
+      };
+    })
+    .cond([states.CUSTOMER_RECEIVED, PROVIDER], () => {
+      return { 
+        processName, 
+        processState, 
+        showDetailCardHeadings: true,
+        showExtraInfo: true, // Show info waiting for customer to return item
+      };
+    })
+    // ====================================
+    // RENTAL WORKFLOW: CUSTOMER_RETURNED STATE
+    // Provider can confirm return received
+    // ====================================
+    .cond([states.CUSTOMER_RETURNED, PROVIDER], () => {
+      const primary = actionButtonProps(transitions.CONFIRM_RETURN_RECEIVED, PROVIDER);
+      return {
+        processName,
+        processState,
+        showDetailCardHeadings: true,
+        showActionButtons: true,
+        primaryButtonProps: primary,
+      };
+    })
+    .cond([states.CUSTOMER_RETURNED, CUSTOMER], () => {
+      return { 
+        processName, 
+        processState, 
+        showDetailCardHeadings: true,
+        showExtraInfo: true, // Show info waiting for provider to confirm return
+      };
+    })
+    // ====================================
+    // DELIVERED STATE - Reviews
+    // ====================================
     .cond([states.DELIVERED, _], () => {
       return {
         processName,

@@ -2,6 +2,7 @@ import * as log from '../util/log';
 import * as purchaseProcess from './transactionProcessPurchase';
 import * as bookingProcess from './transactionProcessBooking';
 import * as inquiryProcess from './transactionProcessInquiry';
+import * as depositProcess from './transactionProcessDeposit';
 
 // Supported unit types
 // Note: These are passed to translations/microcopy in certain cases.
@@ -17,6 +18,7 @@ export const INQUIRY = 'inquiry';
 export const PURCHASE_PROCESS_NAME = 'default-purchase';
 export const BOOKING_PROCESS_NAME = 'default-booking';
 export const INQUIRY_PROCESS_NAME = 'default-inquiry';
+export const DEPOSIT_PROCESS_NAME = 'rental-deposit';
 
 /**
  * A process should export:
@@ -49,6 +51,12 @@ const PROCESSES = [
     alias: `${INQUIRY_PROCESS_NAME}/release-1`,
     process: inquiryProcess,
     unitTypes: [INQUIRY],
+  },
+  {
+    name: DEPOSIT_PROCESS_NAME,
+    alias: `${DEPOSIT_PROCESS_NAME}/release-1`,
+    process: depositProcess,
+    unitTypes: [FIXED], // Deposits are fixed amount transactions
   },
 ];
 
@@ -217,6 +225,8 @@ export const resolveLatestProcessName = processName => {
       return BOOKING_PROCESS_NAME;
     case INQUIRY_PROCESS_NAME:
       return INQUIRY_PROCESS_NAME;
+    case DEPOSIT_PROCESS_NAME:
+      return DEPOSIT_PROCESS_NAME;
     default:
       return processName;
   }
@@ -302,6 +312,27 @@ export const isBookingProcess = processName => {
 export const isBookingProcessAlias = processAlias => {
   const processName = processAlias ? processAlias.split('/')[0] : null;
   return processAlias ? isBookingProcess(processName) : false;
+};
+
+/**
+ * Check if the process is deposit process
+ *
+ * @param {String} processName
+ */
+export const isDepositProcess = processName => {
+  const latestProcessName = resolveLatestProcessName(processName);
+  const processInfo = PROCESSES.find(process => process.name === latestProcessName);
+  return [DEPOSIT_PROCESS_NAME].includes(processInfo?.name);
+};
+
+/**
+ * Check if the process/alias points to a deposit process
+ *
+ * @param {String} processAlias
+ */
+export const isDepositProcessAlias = processAlias => {
+  const processName = processAlias ? processAlias.split('/')[0] : null;
+  return processAlias ? isDepositProcess(processName) : false;
 };
 
 /**
